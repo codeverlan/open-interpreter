@@ -1,0 +1,24 @@
+# Frontend-specific configuration
+
+# Components to display
+components:
+  - chat_interface
+  - code_editor
+  - file_browser
+  - settings_panel
+
+# Theme settings
+theme:
+  primary_color: "#007bff"
+  secondary_color: "#6c757d"
+
+# API endpoints
+api:
+  base_url: "http://localhost:5000/api"
+  chat_endpoint: "/chat"
+  run_code_endpoint: "/run_code"
+  get_files_endpoint: "/get_files"
+  get_settings_endpoint: "/get_settings"
+  update_settings_endpoint: "/update_settings"
+
+# Other frontend-specific settings can be added here

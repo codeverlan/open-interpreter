@@ -8,6 +8,7 @@ aifs = lazy_import('aifs')
 class Files:
     def __init__(self, computer):
         self.computer = computer
+        # No sandbox restrictions: This class allows full access to the file system
 
     def search(self, *args, **kwargs):
         """

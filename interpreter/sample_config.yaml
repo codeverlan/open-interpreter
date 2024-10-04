@@ -1,0 +1,163 @@
+# Sample configuration file for Open Interpreter
+
+# General settings
+offline: false
+auto_run: false
+verbose: true
+debug: false
+max_output: 3000
+safe_mode: "off"
+shrink_images: true
+
+# Loop settings
+loop: false
+loop_message: "Proceed with the next task or say 'The task is done' if completed."
+loop_breakers:
+  - "The task is done."
+  - "The task is impossible."
+  - "Let me know what you'd like to do next."
+  - "Please provide more information."
+
+# Conversation settings
+conversation_history: true
+conversation_history_path: "~/.open-interpreter/conversations"
+
+# OS control settings
+os: false
+speak_messages: false
+
+# LLM settings
+system_message: "You are an AI assistant capable of running code and performing tasks."
+custom_instructions: "Focus on providing clear and concise explanations."
+user_message_template: "{content}"
+
+# Computer API settings
+import_computer_api: true
+sync_computer: false
+
+# Skills settings
+import_skills: true
+skills_path: "~/.open-interpreter/skills"
+
+# Documentation settings
+documentation:
+  sources:
+    - type: "local"
+      path: "~/project_docs"
+    - type: "web"
+      url: "https://docs.example.com"
+    - type: "rag"
+      database_path: "~/rag_database"
+
+# Custom prompts
+prompts:
+  code_review: "Review the following code and suggest improvements:\n\n{code}"
+  bug_fix: "Analyze this code and identify any bugs:\n\n{code}"
+
+# Plugins
+plugins:
+  - name: "git_integration"
+    enabled: true
+  - name: "code_analyzer"
+    enabled: true
+    config:
+      max_lines: 1000
+      ignore_patterns:
+        - "*.test.js"
+        - "*.spec.js"
+
+# Project-specific settings
+project:
+  name: "My Awesome Project"
+  language: "python"
+  framework: "flask"
+  testing_framework: "pytest"
+  linter: "flake8"
+
+# React front-end settings
+frontend:
+  framework: "react"
+  port: 3000
+  api_endpoint: "http://localhost:5000"
+  theme:
+    primary_color: "#007bff"
+    secondary_color: "#6c757d"
+  features:
+    - chat_interface
+    - code_editor
+    - file_browser
+    - settings_panel# Sample configuration file for Open Interpreter
+
+# General settings
+offline: false
+auto_run: false
+verbose: true
+debug: false
+max_output: 3000
+safe_mode: "off"
+shrink_images: true
+
+# Loop settings
+loop: false
+loop_message: "Proceed with the next task or say 'The task is done' if completed."
+loop_breakers:
+  - "The task is done."
+  - "The task is impossible."
+  - "Let me know what you'd like to do next."
+  - "Please provide more information."
+
+# Conversation settings
+conversation_history: true
+conversation_history_path: "~/.open-interpreter/conversations"
+
+# OS control settings
+os: false
+speak_messages: false
+
+# LLM settings
+system_message: "You are an AI assistant capable of running code and performing tasks."
+custom_instructions: "Focus on providing clear and concise explanations."
+user_message_template: "{content}"
+
+# Computer API settings
+import_computer_api: true
+sync_computer: false
+
+# Skills settings
+import_skills: true
+skills_path: "~/.open-interpreter/skills"
+
+# Documentation settings
+documentation:
+  sources:
+    - type: "local"
+      path: "~/project_docs"
+    - type: "web"
+      url: "https://docs.example.com"
+    - type: "rag"
+      database_path: "~/rag_database"
+
+# Custom prompts
+prompts:
+  code_review: "Review the following code and suggest improvements:\n\n{code}"
+  bug_fix: "Analyze this code and identify any bugs:\n\n{code}"
+
+# Plugins
+plugins:
+  - name: "git_integration"
+    enabled: true
+  - name: "code_analyzer"
+    enabled: true
+    config:
+      max_lines: 1000
+      ignore_patterns:
+        - "*.test.js"
+        - "*.spec.js"
+
+# Project-specific settings
+project:
+  name: "My Awesome Project"
+  language: "python"
+  framework: "flask"
+  testing_framework: "pytest"
+  linter: "flake8"
