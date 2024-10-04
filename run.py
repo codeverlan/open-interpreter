@@ -1,7 +1,11 @@
 import os
 import subprocess
+import sys
 from interpreter.extended_interpreter import ExtendedInterpreter
 from interpreter.server.api import start_server
+
+def install_python_dependencies():
+    subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
 
 def build_react_app():
     os.chdir('interpreter/frontend')
@@ -10,15 +14,27 @@ def build_react_app():
     os.chdir('../..')
 
 def main():
-    # Build the React app
-    build_react_app()
+    # Store the original directory
+    original_dir = os.getcwd()
 
-    # Initialize the ExtendedInterpreter
-    interpreter = ExtendedInterpreter(server_port=5000)
-    interpreter.load_frontend_config('frontend_config.yaml')  # You can create this file for frontend-specific settings
+    # Change to the 'open' directory
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # Start the server
-    start_server(interpreter, port=interpreter.server_port)
+    try:
+        # Install Python dependencies
+        install_python_dependencies()
+
+        # Build the React app
+        build_react_app()
+
+        # Initialize the ExtendedInterpreter
+        interpreter = ExtendedInterpreter(server_port=5159)
+
+        # Start the server
+        start_server(interpreter, port=5159)
+    finally:
+        # Change back to the original directory
+        os.chdir(original_dir)
 
 if __name__ == "__main__":
     main()

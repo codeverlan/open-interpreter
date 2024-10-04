@@ -1,3 +1,18 @@
 flask==2.0.1
 pyyaml==5.4.1
+pytest==7.4.0
+pydantic==2.6.4
+shortuuid==1.0.13
+fastapi==0.111.0
+uvicorn==0.30.1
+janus==1.0.0
+aiohttp==3.10.8
+python-dotenv==1.0.1
+tiktoken==0.7.0
+litellm==1.41.26
+starlette==0.37.2
+typer==0.12.4
+html2text==2024.2.26
+selenium==4.24.0
+webdriver-manager==4.0.2
 # Add any other dependencies required by the Open Interpreter
