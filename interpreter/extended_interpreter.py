@@ -3,24 +3,8 @@ import os
 import json
 import shutil
 from .core.core import OpenInterpreter
-from .server.api import start_server
 from .project_analyzer import ProjectAnalyzer
-
-class InterpreterError(Exception):
-    """Base class for interpreter errors"""
-    pass
-
-class ConfigurationError(InterpreterError):
-    """Raised when there's an issue with configuration"""
-    pass
-
-class FileOperationError(InterpreterError):
-    """Raised when there's an issue with file operations"""
-    pass
-
-class ExecutionError(InterpreterError):
-    """Raised when there's an issue with code execution"""
-    pass
+from .exceptions import InterpreterError, ConfigurationError, FileOperationError, ExecutionError
 
 class ExtendedInterpreter(OpenInterpreter):
     def __init__(self, *args, **kwargs):
@@ -43,12 +27,6 @@ class ExtendedInterpreter(OpenInterpreter):
         os.environ['TEMPERATURE'] = '0.2'  # Lower temperature for less randomness
         os.environ['TOP_P'] = '0.1'  # Lower top_p for more focused sampling
         self.max_tokens = 2048  # Reduced max tokens to limit response length
-
-    def start_server(self):
-        try:
-            start_server(self, port=self.server_port)
-        except Exception as e:
-            raise InterpreterError(f"Failed to start server: {str(e)}")
 
     def load_frontend_config(self, config_path):
         try:

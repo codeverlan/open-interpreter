@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, jsonify, request, Response
 import os
-from ..extended_interpreter import InterpreterError, ConfigurationError, FileOperationError, ExecutionError
+from ..exceptions import InterpreterError, ConfigurationError, FileOperationError, ExecutionError
 
 def create_app(interpreter):
     app = Flask(__name__, static_folder='../../frontend/build')

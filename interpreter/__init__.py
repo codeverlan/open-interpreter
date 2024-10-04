@@ -3,7 +3,8 @@ from .core.computer.terminal.base_language import BaseLanguage
 from .core.core import OpenInterpreter
 
 interpreter = OpenInterpreter()
-computer = interpreter.computer
+# Commenting out the line below as it's causing an error
+# computer = interpreter.computer
 
 #     ____                      ____      __                            __
 #    / __ \____  ___  ____     /  _/___  / /____  _________  ________  / /____  _____

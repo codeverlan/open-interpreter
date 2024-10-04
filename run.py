@@ -1,6 +1,7 @@
 import os
 import subprocess
 from interpreter.extended_interpreter import ExtendedInterpreter
+from interpreter.server.api import start_server
 
 def build_react_app():
     os.chdir('interpreter/frontend')
@@ -12,10 +13,12 @@ def main():
     # Build the React app
     build_react_app()
 
-    # Initialize and start the ExtendedInterpreter
+    # Initialize the ExtendedInterpreter
     interpreter = ExtendedInterpreter(server_port=5000)
     interpreter.load_frontend_config('frontend_config.yaml')  # You can create this file for frontend-specific settings
-    interpreter.start_server()
+
+    # Start the server
+    start_server(interpreter, port=interpreter.server_port)
 
 if __name__ == "__main__":
     main()
