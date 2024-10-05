@@ -5,6 +5,7 @@ import FileBrowser from './FileBrowser';
 import SettingsPanel from './SettingsPanel';
 import DocumentationViewer from './DocumentationViewer';
 import ProjectAnalyzer from './ProjectAnalyzer';
+import PromptManager from './components/PromptManager';
 import './styles.css';
 
 const API_BASE_URL = '/api';
@@ -251,6 +252,11 @@ function App() {
           <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />
           <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />
           <ProjectAnalyzer apiEndpoint={API_BASE_URL} currentProject={currentProject} />
+          {currentProject && (
+            <ErrorBoundary>
+              <PromptManager projectId={currentProject} />
+            </ErrorBoundary>
+          )}
         </div>
       </div>
     </ErrorBoundary>
