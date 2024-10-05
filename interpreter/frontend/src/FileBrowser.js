@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FaFolder, FaFile, FaArrowUp } from 'react-icons/fa';
 
-const FileBrowser = ({ files, onFileSelect }) => {
-  const [currentPath, setCurrentPath] = useState('/');
-
+const FileBrowser = ({ files, onFileSelect, currentPath }) => {
   const handleFileClick = (file) => {
-    const newPath = currentPath === '/' ? `/${file}` : `${currentPath}/${file}`;
-    if (file.endsWith('/')) {
-      setCurrentPath(newPath);
-      onFileSelect(newPath);
-    } else {
-      // Handle file selection (e.g., open file in editor)
-      console.log(`Selected file: ${newPath}`);
+    console.log('Clicked file:', file);
+    try {
+      const newPath = currentPath === '/' ? `/${file.name}` : `${currentPath}/${file.name}`;
+      if (file.type === 'directory') {
+        onFileSelect(newPath);
+      } else {
+        // Handle file selection (e.g., open file in editor)
+        console.log(`Selected file: ${newPath}`);
+      }
+    } catch (error) {
+      console.error('Error in handleFileClick:', error);
     }
   };
 
   const handleBackClick = () => {
-    const parentPath = currentPath.split('/').slice(0, -1).join('/') || '/';
-    setCurrentPath(parentPath);
-    onFileSelect(parentPath);
+    try {
+      const parentPath = currentPath.split('/').slice(0, -1).join('/') || '/';
+      onFileSelect(parentPath);
+    } catch (error) {
+      console.error('Error in handleBackClick:', error);
+    }
   };
+
+  console.log('Rendering FileBrowser with files:', files);
 
   return (
     <div className="file-browser">
@@ -31,19 +38,19 @@ const FileBrowser = ({ files, onFileSelect }) => {
             <FaArrowUp /> ..
           </li>
         )}
-        {files.map((file, index) => (
+        {Array.isArray(files) ? files.map((file, index) => (
           <li key={index} onClick={() => handleFileClick(file)}>
-            {file.endsWith('/') ? (
+            {file && typeof file === 'object' ? (
               <>
-                <FaFolder /> {file}
+                {file.type === 'directory' ? <FaFolder /> : <FaFile />} {file.name}
               </>
             ) : (
-              <>
-                <FaFile /> {file}
-              </>
+              <span>Invalid file object</span>
             )}
           </li>
-        ))}
+        )) : (
+          <li>No files to display</li>
+        )}
       </ul>
     </div>
   );
