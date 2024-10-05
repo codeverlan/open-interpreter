@@ -162,7 +162,9 @@ function App() {
       const data = await response.json();
       sendLog(`App: Received files data: ${JSON.stringify(data)}`);
       if (data.success) {
-        setFiles(data.files);
+        // Ensure all file names are strings
+        const validFiles = data.files.filter(file => typeof file.name === 'string');
+        setFiles(validFiles);
         setCurrentPath(path);
         sendLog('App: Files and current path updated');
       } else {

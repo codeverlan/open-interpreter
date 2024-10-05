@@ -40,7 +40,7 @@ const FileBrowser = ({ files, onFileSelect, currentPath }) => {
         )}
         {Array.isArray(files) ? files.map((file, index) => (
           <li key={index} onClick={() => handleFileClick(file)}>
-            {file && typeof file === 'object' ? (
+            {file && typeof file === 'object' && typeof file.name === 'string' ? (
               <>
                 {file.type === 'directory' ? <FaFolder /> : <FaFile />} {file.name}
               </>
