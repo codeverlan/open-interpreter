@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ChatInterface from './ChatInterface';
-import CodeEditor from './CodeEditor';
 import FileBrowser from './FileBrowser';
 import SettingsPanel from './SettingsPanel';
 import DocumentationViewer from './DocumentationViewer';
 import ProjectAnalyzer from './ProjectAnalyzer';
 import PromptManager from './components/PromptManager';
 import LogViewer from './components/LogViewer';
+import AgentManager from './components/AgentManager';
 import './styles.css';
 
 const API_BASE_URL = '/api';
@@ -238,17 +238,16 @@ function App() {
         </div>
         <nav>
           <button onClick={() => setActiveTab('chat')}>Chat</button>
-          <button onClick={() => setActiveTab('code')}>Code</button>
           <button onClick={() => setActiveTab('files')}>Files</button>
           <button onClick={() => setActiveTab('settings')}>Settings</button>
           <button onClick={() => setActiveTab('docs')}>Docs</button>
           <button onClick={() => setActiveTab('analyzer')}>Analyzer</button>
           <button onClick={() => setActiveTab('prompts')}>Prompts</button>
           <button onClick={() => setActiveTab('logs')}>Logs</button>
+          <button onClick={() => setActiveTab('agents')}>Agents</button>
         </nav>
         <div className="main-content">
           {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} />}
-          {activeTab === 'code' && <CodeEditor apiEndpoint={`${API_BASE_URL}/run_code`} currentProject={currentProject} />}
           {activeTab === 'files' && (
             isLoading.files ? (
               <div className="loading">Loading files...</div>
@@ -267,6 +266,7 @@ function App() {
             </ErrorBoundary>
           )}
           {activeTab === 'logs' && <LogViewer />}
+          {activeTab === 'agents' && <AgentManager />}
         </div>
       </div>
     </ErrorBoundary>

@@ -1,5 +1,1 @@
 Current logs: []
-Current logs before filtering: []
-Filtered logs (level='ERROR', module=None, keyword=None): []
-Current logs before filtering: []
-Filtered logs (level='INFO', module=None, keyword=None): []

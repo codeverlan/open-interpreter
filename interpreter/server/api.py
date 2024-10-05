@@ -8,6 +8,7 @@ from interpreter.exceptions import InterpreterError, ConfigurationError, FileOpe
 from interpreter.core.models.prompt import Prompt
 from interpreter.core.database import Database
 from interpreter.core.log_handler import LogHandler
+from interpreter.core.agent import Agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -84,6 +85,62 @@ def create_app(interpreter):
             f.write(f"Filtered logs ({level=}, {module=}, {keyword=}): {json.dumps(logs, indent=2)}\n")
         
         return jsonify({"success": True, "logs": logs})
+
+    @app.route('/api/agents', methods=['POST'])
+    def create_agent():
+        data = request.json
+        new_agent = Agent(
+            name=data['name'],
+            description=data['description'],
+            prompt=data['prompt'],
+            ai_model=data['ai_model']
+        )
+        agent_id = db.add_agent(new_agent)
+        return jsonify({"success": True, "agent_id": agent_id})
+
+    @app.route('/api/agents', methods=['GET'])
+    def get_agents():
+        agents = db.get_all_agents()
+        return jsonify({"success": True, "agents": [agent.to_dict() for agent in agents]})
+
+    @app.route('/api/agents/<agent_id>', methods=['GET'])
+    def get_agent(agent_id):
+        agent = db.get_agent(agent_id)
+        if agent:
+            return jsonify({"success": True, "agent": agent.to_dict()})
+        else:
+            return jsonify({"success": False, "error": "Agent not found"}), 404
+
+    @app.route('/api/agents/<agent_id>', methods=['PUT'])
+    def update_agent(agent_id):
+        data = request.json
+        agent = db.get_agent(agent_id)
+        if agent:
+            agent.name = data.get('name', agent.name)
+            agent.description = data.get('description', agent.description)
+            agent.prompt = data.get('prompt', agent.prompt)
+            agent.ai_model = data.get('ai_model', agent.ai_model)
+            db.update_agent(agent)
+            return jsonify({"success": True, "agent": agent.to_dict()})
+        else:
+            return jsonify({"success": False, "error": "Agent not found"}), 404
+
+    @app.route('/api/agents/<agent_id>', methods=['DELETE'])
+    def delete_agent(agent_id):
+        if db.get_agent(agent_id):
+            db.delete_agent(agent_id)
+            return jsonify({"success": True, "message": f"Agent {agent_id} deleted"})
+        else:
+            return jsonify({"success": False, "error": "Agent not found"}), 404
+
+    @app.route('/api/agents/<agent_id>/feedback', methods=['POST'])
+    def submit_feedback(agent_id):
+        feedback_data = request.json
+        try:
+            db.add_feedback_to_agent(agent_id, feedback_data['content'])
+            return jsonify({"success": True, "message": "Feedback submitted successfully"})
+        except ValueError as e:
+            return jsonify({"success": False, "error": str(e)}), 404
 
     def handle_api_request(path):
         if path == 'api/get_projects':

@@ -1,8 +1,10 @@
-import sqlite3
 import os
+import sqlite3
+import json
 from threading import local
 from datetime import datetime
 from interpreter.core.models.prompt import Prompt
+from interpreter.core.agent import Agent
 from interpreter.core.default_system_message import default_system_message
 
 class Database:
@@ -41,6 +43,19 @@ class Database:
             )
         ''')
         
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                prompt TEXT NOT NULL,
+                ai_model TEXT NOT NULL,
+                feedback TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         # Check if the is_default_system_message column exists, if not, add it
         cursor.execute("PRAGMA table_info(prompts)")
         columns = [column[1] for column in cursor.fetchall()]
@@ -49,93 +64,75 @@ class Database:
         
         conn.commit()
 
-    def add_prompt(self, prompt):
+    def add_agent(self, agent):
         conn, cursor = self.get_connection()
         cursor.execute('''
-            INSERT INTO prompts (project_id, name, content, is_default_system_message, created_at, updated_at)
+            INSERT INTO agents (id, name, description, prompt, ai_model, feedback)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', (prompt.project_id, prompt.name, prompt.content, prompt.is_default_system_message, 
-              prompt.created_at, prompt.updated_at))
+        ''', (agent.id, agent.name, agent.description, agent.prompt, agent.ai_model, json.dumps(agent.feedback)))
         conn.commit()
-        return cursor.lastrowid
+        return agent.id
 
-    def get_prompt(self, prompt_id):
+    def get_agent(self, agent_id):
         conn, cursor = self.get_connection()
-        cursor.execute('SELECT * FROM prompts WHERE id = ?', (prompt_id,))
+        cursor.execute('SELECT * FROM agents WHERE id = ?', (agent_id,))
         row = cursor.fetchone()
         if row:
-            return Prompt(
+            return Agent(
                 id=row['id'],
-                project_id=row['project_id'],
                 name=row['name'],
-                content=row['content'],
-                is_default_system_message=bool(row['is_default_system_message']),
-                created_at=row['created_at'],
-                updated_at=row['updated_at']
+                description=row['description'],
+                prompt=row['prompt'],
+                ai_model=row['ai_model'],
+                feedback=json.loads(row['feedback']) if row['feedback'] else []
             )
         return None
 
-    def get_prompts_for_project(self, project_id):
-        conn, cursor = self.get_connection()
-        cursor.execute('SELECT * FROM prompts WHERE project_id = ?', (project_id,))
-        rows = cursor.fetchall()
-        return [Prompt(
-            id=row['id'],
-            project_id=row['project_id'],
-            name=row['name'],
-            content=row['content'],
-            is_default_system_message=bool(row['is_default_system_message']),
-            created_at=row['created_at'],
-            updated_at=row['updated_at']
-        ) for row in rows]
-
-    def update_prompt(self, prompt):
+    def update_agent(self, agent):
         conn, cursor = self.get_connection()
         cursor.execute('''
-            UPDATE prompts
-            SET name = ?, content = ?, is_default_system_message = ?, updated_at = ?
+            UPDATE agents
+            SET name = ?, description = ?, prompt = ?, ai_model = ?, feedback = ?, updated_at = ?
             WHERE id = ?
-        ''', (prompt.name, prompt.content, prompt.is_default_system_message, datetime.now(), prompt.id))
+        ''', (agent.name, agent.description, agent.prompt, agent.ai_model, json.dumps(agent.feedback), datetime.now(), agent.id))
         conn.commit()
 
-    def delete_prompt(self, prompt_id):
+    def delete_agent(self, agent_id):
         conn, cursor = self.get_connection()
-        cursor.execute('DELETE FROM prompts WHERE id = ?', (prompt_id,))
+        cursor.execute('DELETE FROM agents WHERE id = ?', (agent_id,))
         conn.commit()
 
-    def get_all_project_ids(self):
+    def get_all_agents(self):
         conn, cursor = self.get_connection()
-        cursor.execute('SELECT DISTINCT project_id FROM prompts')
+        cursor.execute('SELECT * FROM agents')
         rows = cursor.fetchall()
-        return [row['project_id'] for row in rows]
+        return [Agent(
+            id=row['id'],
+            name=row['name'],
+            description=row['description'],
+            prompt=row['prompt'],
+            ai_model=row['ai_model'],
+            feedback=json.loads(row['feedback']) if row['feedback'] else []
+        ) for row in rows]
 
-    def get_or_create_default_system_message(self, project_id):
-        conn, cursor = self.get_connection()
-        cursor.execute('SELECT * FROM prompts WHERE project_id = ? AND is_default_system_message = 1', (project_id,))
-        row = cursor.fetchone()
-        if row:
-            return Prompt(
-                id=row['id'],
-                project_id=row['project_id'],
-                name=row['name'],
-                content=row['content'],
-                is_default_system_message=bool(row['is_default_system_message']),
-                created_at=row['created_at'],
-                updated_at=row['updated_at']
-            )
+    def add_feedback_to_agent(self, agent_id, feedback_content):
+        agent = self.get_agent(agent_id)
+        if agent:
+            if not isinstance(agent.feedback, list):
+                agent.feedback = []
+            agent.feedback.append({
+                'content': feedback_content,
+                'timestamp': datetime.now().isoformat()
+            })
+            self.update_agent(agent)
         else:
-            new_prompt = Prompt(
-                id=None,
-                project_id=project_id,
-                name="Default System Message",
-                content=default_system_message,
-                is_default_system_message=True
-            )
-            new_id = self.add_prompt(new_prompt)
-            return self.get_prompt(new_id)
+            raise ValueError(f"Agent with id {agent_id} not found")
 
     def close(self):
         if hasattr(self._thread_local, "connection"):
             self._thread_local.connection.close()
             del self._thread_local.connection
             del self._thread_local.cursor
+
+    # Existing methods (add_prompt, get_prompt, get_prompts_for_project, update_prompt, delete_prompt, get_all_project_ids, get_or_create_default_system_message)
+    # ... (keep all the existing methods as they were)
