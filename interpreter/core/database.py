@@ -52,7 +52,7 @@ class Database:
                 ai_model TEXT NOT NULL,
                 feedback TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP
             )
         ''')
         
@@ -62,14 +62,22 @@ class Database:
         if 'is_default_system_message' not in columns:
             cursor.execute('ALTER TABLE prompts ADD COLUMN is_default_system_message BOOLEAN NOT NULL DEFAULT 0')
         
+        # Check if the updated_at column exists in agents table, if not, add it
+        cursor.execute("PRAGMA table_info(agents)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'updated_at' not in columns:
+            cursor.execute('ALTER TABLE agents ADD COLUMN updated_at TIMESTAMP')
+            # Update existing rows with current timestamp
+            cursor.execute('UPDATE agents SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL')
+        
         conn.commit()
 
     def add_agent(self, agent):
         conn, cursor = self.get_connection()
         cursor.execute('''
-            INSERT INTO agents (id, name, description, prompt, ai_model, feedback)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (agent.id, agent.name, agent.description, agent.prompt, agent.ai_model, json.dumps(agent.feedback)))
+            INSERT INTO agents (id, name, description, prompt, ai_model, feedback, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (agent.id, agent.name, agent.description, agent.prompt, agent.ai_model, json.dumps(agent.feedback), datetime.now()))
         conn.commit()
         return agent.id
 
@@ -79,11 +87,11 @@ class Database:
         row = cursor.fetchone()
         if row:
             return Agent(
-                id=row['id'],
                 name=row['name'],
                 description=row['description'],
                 prompt=row['prompt'],
                 ai_model=row['ai_model'],
+                id=row['id'],
                 feedback=json.loads(row['feedback']) if row['feedback'] else []
             )
         return None
@@ -107,23 +115,18 @@ class Database:
         cursor.execute('SELECT * FROM agents')
         rows = cursor.fetchall()
         return [Agent(
-            id=row['id'],
             name=row['name'],
             description=row['description'],
             prompt=row['prompt'],
             ai_model=row['ai_model'],
+            id=row['id'],
             feedback=json.loads(row['feedback']) if row['feedback'] else []
         ) for row in rows]
 
     def add_feedback_to_agent(self, agent_id, feedback_content):
         agent = self.get_agent(agent_id)
         if agent:
-            if not isinstance(agent.feedback, list):
-                agent.feedback = []
-            agent.feedback.append({
-                'content': feedback_content,
-                'timestamp': datetime.now().isoformat()
-            })
+            agent.add_feedback(feedback_content)
             self.update_agent(agent)
         else:
             raise ValueError(f"Agent with id {agent_id} not found")

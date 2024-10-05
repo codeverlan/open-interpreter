@@ -142,6 +142,27 @@ def create_app(interpreter):
         except ValueError as e:
             return jsonify({"success": False, "error": str(e)}), 404
 
+    @app.route('/api/project_status', methods=['GET'])
+    def get_project_status():
+        try:
+            with open('/root/open/project_status.md', 'r') as f:
+                status = f.read()
+            return jsonify({"success": True, "status": status})
+        except FileNotFoundError:
+            return jsonify({"success": False, "error": "Project status file not found"}), 404
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route('/api/project_status', methods=['POST'])
+    def update_project_status():
+        data = request.json
+        try:
+            with open('/root/open/project_status.md', 'w') as f:
+                f.write(data['status'])
+            return jsonify({"success": True, "message": "Project status updated successfully"})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
     def handle_api_request(path):
         if path == 'api/get_projects':
             response = interpreter.get_projects()

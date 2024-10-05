@@ -4,14 +4,17 @@
   "private": true,
   "proxy": "http://localhost:5159",
   "dependencies": {
+    "@codemirror/lang-markdown": "^6.3.0",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@uiw/react-codemirror": "^4.23.5",
+    "axios": "^0.27.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
     "react-icons": "^4.8.0",
-    "axios": "^0.27.2",
-    "styled-components": "^5.3.9",
+    "react-markdown": "^8.0.0",
+    "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
-    "react-markdown": "^8.0.0"
+    "styled-components": "^5.3.9"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",

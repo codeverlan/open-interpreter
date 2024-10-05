@@ -1,0 +1,104 @@
+.project-status {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.project-status h2 {
+  color: #333;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.markdown-editor {
+  width: 100%;
+  min-height: 300px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.markdown-editor:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.button-group button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-group button:hover {
+  background-color: #0056b3;
+}
+
+.button-group button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.save-indicator {
+  margin-top: 10px;
+  color: #28a745;
+}
+
+.loading, .error {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.error {
+  color: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .project-status {
+    width: 95%;
+    padding: 10px;
+  }
+
+  .markdown-editor {
+    font-size: 14px;
+  }
+
+  .button-group button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .project-status {
+    width: 80%;
+  }
+
+  .markdown-editor {
+    font-size: 18px;
+  }
+
+  .button-group button {
+    font-size: 18px;
+    padding: 12px 24px;
+  }
+}

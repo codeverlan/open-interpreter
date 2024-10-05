@@ -3,7 +3,7 @@ import ChatInterface from './ChatInterface';
 import FileBrowser from './FileBrowser';
 import SettingsPanel from './SettingsPanel';
 import DocumentationViewer from './DocumentationViewer';
-import ProjectAnalyzer from './ProjectAnalyzer';
+import ProjectStatus from './components/ProjectStatus';
 import PromptManager from './components/PromptManager';
 import LogViewer from './components/LogViewer';
 import AgentManager from './components/AgentManager';
@@ -241,7 +241,7 @@ function App() {
           <button onClick={() => setActiveTab('files')}>Files</button>
           <button onClick={() => setActiveTab('settings')}>Settings</button>
           <button onClick={() => setActiveTab('docs')}>Docs</button>
-          <button onClick={() => setActiveTab('analyzer')}>Analyzer</button>
+          <button onClick={() => setActiveTab('status')}>Status</button>
           <button onClick={() => setActiveTab('prompts')}>Prompts</button>
           <button onClick={() => setActiveTab('logs')}>Logs</button>
           <button onClick={() => setActiveTab('agents')}>Agents</button>
@@ -259,7 +259,7 @@ function App() {
           )}
           {activeTab === 'settings' && <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />}
           {activeTab === 'docs' && <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
-          {activeTab === 'analyzer' && <ProjectAnalyzer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
+          {activeTab === 'status' && <ProjectStatus apiEndpoint={API_BASE_URL} />}
           {activeTab === 'prompts' && currentProject && (
             <ErrorBoundary>
               <PromptManager projectId={currentProject} />
