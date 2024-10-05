@@ -3,35 +3,24 @@
 ## Vision
 The goal in modifying this program is to create a React Frontend with a modular, project-based environment. This allows users to customize the program's functionality on a per-project basis, primarily intended for open-source software. Our modifications prioritize the ability to reference specific documentation and customize prompts for each project. The program adheres to programming best practices rather than being creative.
 
-## Current Issues
+## Current Task
 
-1. White Screen Problem:
-   - The application initially loads but then displays a white screen
-   - Error message observed: "TypeError: e.endsWith is not a function"
-   - Error occurs at:
-     ```
-     at eo (http://198.91.27.14:5159/static/js/main.983034d4.js:2:313445)
-     at div
-     at div
-     at co (http://198.91.27.14:5159/static/js/main.983034d4.js:2:328300)
-     at fo (http://198.91.27.14:5159/static/js/main.983034d4.js:2:329015)
-     ```
+1. Redesign UI to follow best practices. 
+   -Use a series of tabs across the top of the interface. 
+   -Disable or delete the save snippits fuction.
+   -Consider which elements belong on which tabs in order for the user to use the program best. 
+   -The entire preferences screen needs to be redesigned and have its own tab. 
+   -The knowledgebase feature needs to have the function to upload single files, as well as reference   entire directories. 
+   -The pojects feature needs to be able to add and delete projects. When the project is added, the user should be prompted for the location of the project directory, AND the associated conda environment. This should be saved, paired and stored.
 
-2. Log Implementation:
-   - Current implementation is not effectively utilizing the logs generated in the terminal
-   - Need to improve the way logs are analyzed and used for debugging
-
-3. API Endpoint Mismatches:
+2. API Endpoint Mismatches:
    - Some API calls are returning 404 errors, specifically:
      - GET /api/get_settings/get_settings
      - GET /api/get_settings/get_projects
 
 ## Next Steps
 
-1. Debug White Screen Issue:
-   - Investigate the `endsWith` error in the FileBrowser component
-   - Review the minified JavaScript file to identify the source of the error
-   - Implement additional error handling in the FileBrowser component
+1. Ability to list, edit, and save Open Interpreter prompts on a per project basis.
 
 2. Improve Log Utilization:
    - Develop a strategy for more effectively analyzing and using the logs generated in the terminal
