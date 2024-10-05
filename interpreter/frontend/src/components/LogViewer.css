@@ -1,0 +1,72 @@
+.log-viewer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.filters {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.filters input {
+  width: 30%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.log-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.log-item {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.log-item .timestamp {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.log-item .level {
+  font-weight: bold;
+  margin-right: 10px;
+  text-transform: uppercase;
+}
+
+.log-item .module {
+  font-style: italic;
+  margin-right: 10px;
+}
+
+.log-item .message {
+  flex-basis: 100%;
+  margin-top: 5px;
+}
+
+.log-item.info {
+  background-color: #e8f5e9;
+}
+
+.log-item.warning {
+  background-color: #fff3e0;
+}
+
+.log-item.error {
+  background-color: #ffebee;
+}
+
+.error {
+  color: #d32f2f;
+  font-weight: bold;
+}

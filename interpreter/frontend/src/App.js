@@ -6,6 +6,7 @@ import SettingsPanel from './SettingsPanel';
 import DocumentationViewer from './DocumentationViewer';
 import ProjectAnalyzer from './ProjectAnalyzer';
 import PromptManager from './components/PromptManager';
+import LogViewer from './components/LogViewer';
 import './styles.css';
 
 const API_BASE_URL = '/api';
@@ -78,7 +79,7 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   sendLog('App: Component function started');
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState({ project_name: "Open Interpreter" });
   const [isLoading, setIsLoading] = useState({
     settings: true,
     projects: true,
@@ -89,13 +90,14 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState('/');
+  const [activeTab, setActiveTab] = useState('chat');
 
-  const handleApiError = (err, context) => {
+  const handleApiError = useCallback((err, context) => {
     const errorMessage = `App: Error in ${context}: ${err.message}`;
     sendLog(errorMessage, 'error');
     setError(errorMessage);
     setIsLoading(prevState => ({...prevState, [context.toLowerCase()]: false}));
-  };
+  }, []);
 
   const fetchSettings = useCallback(async () => {
     sendLog('App: fetchSettings started');
@@ -121,7 +123,7 @@ function App() {
       setIsLoading(prevState => ({...prevState, settings: false}));
       sendLog('App: fetchSettings completed');
     }
-  }, []);
+  }, [handleApiError]);
 
   const fetchProjects = useCallback(async () => {
     sendLog('App: fetchProjects started');
@@ -137,8 +139,8 @@ function App() {
       if (data.success) {
         setProjects(data.projects);
         if (data.projects.length > 0 && !currentProject) {
-          setCurrentProject(data.projects[0]);
-          sendLog(`App: Current project set to: ${data.projects[0]}`);
+          setCurrentProject(data.projects[0].id);
+          sendLog(`App: Current project set to: ${data.projects[0].id}`);
         }
       } else {
         throw new Error(data.error || 'Failed to fetch projects');
@@ -149,7 +151,7 @@ function App() {
       setIsLoading(prevState => ({...prevState, projects: false}));
       sendLog('App: fetchProjects completed');
     }
-  }, [currentProject]);
+  }, [currentProject, handleApiError]);
 
   const fetchFiles = useCallback(async (path = '/') => {
     sendLog(`App: fetchFiles started with path: ${path}`);
@@ -164,7 +166,7 @@ function App() {
       sendLog(`App: Received files data: ${JSON.stringify(data)}`);
       if (data.success) {
         // Ensure all file names are strings
-        const validFiles = data.files.filter(file => typeof file.name === 'string');
+        const validFiles = data.files.filter(file => typeof file === 'string');
         setFiles(validFiles);
         setCurrentPath(path);
         sendLog('App: Files and current path updated');
@@ -177,7 +179,7 @@ function App() {
       setIsLoading(prevState => ({...prevState, files: false}));
       sendLog('App: fetchFiles completed');
     }
-  }, []);
+  }, [handleApiError]);
 
   useEffect(() => {
     sendLog('App: useEffect for fetchSettings and fetchProjects started');
@@ -194,9 +196,9 @@ function App() {
     sendLog('App: useEffect for fetchFiles completed');
   }, [fetchFiles, currentPath, currentProject]);
 
-  const handleProjectChange = (projectName) => {
-    sendLog(`App: handleProjectChange called with: ${projectName}`);
-    setCurrentProject(projectName);
+  const handleProjectChange = (projectId) => {
+    sendLog(`App: handleProjectChange called with: ${projectId}`);
+    setCurrentProject(projectId);
     setCurrentPath('/');
     fetchFiles('/');
   };
@@ -206,7 +208,7 @@ function App() {
     fetchFiles(path);
   };
 
-  sendLog('App: Rendering component');
+  sendLog('App: Rendering main content');
   sendLog(`App: Current state - isLoading: ${JSON.stringify(isLoading)}, error: ${error}, config: ${JSON.stringify(config)}`);
 
   if (isLoading.settings || isLoading.projects) {
@@ -219,11 +221,6 @@ function App() {
     return <div className="error">{error}</div>;
   }
 
-  if (!config) {
-    sendLog('App: Rendering no config state');
-    return <div className="error">Failed to load configuration. Please refresh the page and try again.</div>;
-  }
-
   sendLog('App: Rendering main content');
   return (
     <ErrorBoundary>
@@ -233,30 +230,43 @@ function App() {
           <select value={currentProject || ''} onChange={(e) => handleProjectChange(e.target.value)}>
             <option value="">Select a project</option>
             {projects.map((project) => (
-              <option key={project} value={project}>
-                {project}
+              <option key={project.id} value={project.id}>
+                {project.name}
               </option>
             ))}
           </select>
         </div>
+        <nav>
+          <button onClick={() => setActiveTab('chat')}>Chat</button>
+          <button onClick={() => setActiveTab('code')}>Code</button>
+          <button onClick={() => setActiveTab('files')}>Files</button>
+          <button onClick={() => setActiveTab('settings')}>Settings</button>
+          <button onClick={() => setActiveTab('docs')}>Docs</button>
+          <button onClick={() => setActiveTab('analyzer')}>Analyzer</button>
+          <button onClick={() => setActiveTab('prompts')}>Prompts</button>
+          <button onClick={() => setActiveTab('logs')}>Logs</button>
+        </nav>
         <div className="main-content">
-          <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} />
-          <CodeEditor apiEndpoint={`${API_BASE_URL}/run_code`} currentProject={currentProject} />
-          {isLoading.files ? (
-            <div className="loading">Loading files...</div>
-          ) : (
-            <ErrorBoundary>
-              <FileBrowser files={files} onFileSelect={handleFileSelect} currentPath={currentPath} />
-            </ErrorBoundary>
+          {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} />}
+          {activeTab === 'code' && <CodeEditor apiEndpoint={`${API_BASE_URL}/run_code`} currentProject={currentProject} />}
+          {activeTab === 'files' && (
+            isLoading.files ? (
+              <div className="loading">Loading files...</div>
+            ) : (
+              <ErrorBoundary>
+                <FileBrowser files={files} onFileSelect={handleFileSelect} currentPath={currentPath} />
+              </ErrorBoundary>
+            )
           )}
-          <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />
-          <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />
-          <ProjectAnalyzer apiEndpoint={API_BASE_URL} currentProject={currentProject} />
-          {currentProject && (
+          {activeTab === 'settings' && <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />}
+          {activeTab === 'docs' && <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
+          {activeTab === 'analyzer' && <ProjectAnalyzer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
+          {activeTab === 'prompts' && currentProject && (
             <ErrorBoundary>
               <PromptManager projectId={currentProject} />
             </ErrorBoundary>
           )}
+          {activeTab === 'logs' && <LogViewer />}
         </div>
       </div>
     </ErrorBoundary>
