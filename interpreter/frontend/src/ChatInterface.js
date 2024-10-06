@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
-function ChatInterface({ apiEndpoint, currentAgent }) {
+function ChatInterface({ apiEndpoint, currentProject, selectedFiles, currentAgent }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [taskResult, setTaskResult] = useState(null);
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
 
@@ -98,6 +100,40 @@ function ChatInterface({ apiEndpoint, currentAgent }) {
     }
   };
 
+  const handleTaskSubmit = async (e) => {
+    e.preventDefault();
+    if (input.trim()) {
+      setIsLoading(true);
+      setError(null);
+      setTaskResult(null);
+
+      try {
+        const response = await axios.post('/api/tasks', {
+          name: "User Task",
+          description: input,
+          required_capabilities: [] // You might want to add a way for users to specify required capabilities
+        });
+
+        if (response.data.success) {
+          setTaskResult(response.data.result);
+          setMessages(prevMessages => [
+            ...prevMessages,
+            { type: 'user', content: input },
+            { type: 'assistant', content: `Task result: ${response.data.result}` }
+          ]);
+        } else {
+          setError('Failed to assign task. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setError('An error occurred while assigning the task. Please try again.');
+      } finally {
+        setIsLoading(false);
+        setInput('');
+      }
+    }
+  };
+
   return (
     <div className="chat-interface">
       <div className="message-list">
@@ -108,6 +144,7 @@ function ChatInterface({ apiEndpoint, currentAgent }) {
         ))}
         {isLoading && <div className="message assistant">Thinking...</div>}
         {error && <div className="message error">{error}</div>}
+        {taskResult && <div className="message assistant">Task Result: {taskResult}</div>}
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSubmit}>
@@ -115,11 +152,14 @@ function ChatInterface({ apiEndpoint, currentAgent }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          placeholder="Type your message or task..."
           disabled={isLoading || !currentAgent}
         />
         <button type="submit" disabled={isLoading || !currentAgent}>
-          {isLoading ? 'Sending...' : 'Send'}
+          {isLoading ? 'Sending...' : 'Send Message'}
+        </button>
+        <button type="button" onClick={handleTaskSubmit} disabled={isLoading || !currentAgent}>
+          Submit Task
         </button>
         {isLoading && (
           <button type="button" onClick={handleCancel}>
@@ -128,7 +168,7 @@ function ChatInterface({ apiEndpoint, currentAgent }) {
         )}
       </form>
       {!currentAgent && (
-        <div className="warning">Please select an agent to start chatting.</div>
+        <div className="warning">Please select an agent to start chatting or submit tasks.</div>
       )}
       {currentAgent && (
         <div className="agent-info">

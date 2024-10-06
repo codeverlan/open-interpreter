@@ -21,6 +21,8 @@ class Agent:
         self.openrouter_client = OpenRouterClient()
         self.capabilities = []  # New attribute for task assignment
         self.current_task = None  # New attribute to track current task
+        self.is_lead_agent = False  # New attribute to identify lead agents
+        self.managed_agents = []  # New attribute for lead agents to manage other agents
 
     def add_skill(self, skill):
         if isinstance(skill, Skill):
@@ -159,7 +161,9 @@ class Agent:
             'state': self.state,
             'parameters': self.parameters,
             'capabilities': self.capabilities,
-            'current_task': self.current_task
+            'current_task': self.current_task,
+            'is_lead_agent': self.is_lead_agent,
+            'managed_agents': [agent.id for agent in self.managed_agents] if self.is_lead_agent else []
         }
 
     @classmethod
@@ -177,7 +181,73 @@ class Agent:
         agent.parameters = data.get('parameters', {})
         agent.capabilities = data.get('capabilities', [])
         agent.current_task = data.get('current_task')
+        agent.is_lead_agent = data.get('is_lead_agent', False)
         return agent
 
     def __repr__(self):
         return f"Agent(id={self.id}, name={self.name})"
+
+    # New methods for Lead Agent functionality
+    def set_as_lead_agent(self):
+        """
+        Set this agent as a lead agent.
+        """
+        self.is_lead_agent = True
+
+    def add_managed_agent(self, agent):
+        """
+        Add an agent to be managed by the lead agent.
+        """
+        if self.is_lead_agent:
+            self.managed_agents.append(agent)
+        else:
+            raise ValueError("Only lead agents can manage other agents.")
+
+    def remove_managed_agent(self, agent):
+        """
+        Remove an agent from being managed by the lead agent.
+        """
+        if self.is_lead_agent:
+            self.managed_agents = [a for a in self.managed_agents if a.id != agent.id]
+        else:
+            raise ValueError("Only lead agents can manage other agents.")
+
+    def delegate_task(self, task):
+        """
+        Delegate a task to the most suitable managed agent.
+        """
+        if not self.is_lead_agent:
+            raise ValueError("Only lead agents can delegate tasks.")
+        
+        for agent in self.managed_agents:
+            if agent.can_handle_task(task):
+                return agent.assign_task(task)
+        return False
+
+    def process_task(self, task):
+        """
+        Process a task by either handling it directly or delegating to a managed agent.
+        """
+        if not self.is_lead_agent:
+            return self.complete_task() if self.can_handle_task(task) else "Cannot handle this task."
+        
+        if self.can_handle_task(task):
+            return self.complete_task()
+        else:
+            delegated = self.delegate_task(task)
+            if delegated:
+                return "Task delegated to a specialized agent."
+            else:
+                return "No suitable agent found for the task."
+
+    def summarize_results(self, results):
+        """
+        Summarize the results from multiple agents.
+        """
+        if not self.is_lead_agent:
+            raise ValueError("Only lead agents can summarize results from multiple agents.")
+        
+        summary = f"Task summary by {self.name}:\n"
+        for result in results:
+            summary += f"- {result}\n"
+        return summary

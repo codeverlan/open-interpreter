@@ -13,136 +13,116 @@ resolve it.
 - The project root directory is /root/open
 
 ## Vision
-
 The goal is to create a React Frontend with a modular, project-based environment, allowing users to customize the program's functionality on a per-project basis. We are now moving towards an agentic model to enhance automation and intelligence in the system. Each agent should be assigned its own AI model for more flexible and specialized interactions.
 
+## Current Task
 ## Agent Hierarchy and Task Assignment
-
 1. Project Level:
+   - A project must be chosen
    - Each project can have multiple agents.
    - Agents within a project can collaborate on tasks.
-
+   - Agents remain persistent until the task is verified as complete by the user
+   
 2. Agent Types:
-   - Pause: Discuss integrating internet access with the user
+   - Lead Agent: Decides what other agents are needed, assigns task, coodinates model behavior, takes feedback from other agents and organizes it to satisfy the user's question, interacts with the user. 
    - General-purpose agents: Can handle a wide range of tasks.
-   - Specialized agents: Focused on specific domains or skills (e.g., code generation, data analysis, writing).
-
-3. Model Assignment:
-   - ✅ Each agent is assigned a specific AI model (e.g., GPT-3.5-turbo, GPT-4).
-   - ✅ Users can set and change the assigned model for each agent.
-   - The assigned model determines the agent's capabilities and performance.
-
-4. Task Assignment Process:
-   - Pause: Discuss progress with the user
+   - Specialized agents: Focused on specific domains or skills (e.g., code generation, data analysis, writing). Specialized agents have access to the internet to assist them with tasks.
+3. Agent Hierarchy:
+   3.1 Introduce a Mead Agent role that will be responsible for coordinating other agents and interacting with the user.
+   Update the existing Agent class to support different agent roles, including the Master Agent.
+   3.2 Modify the task assignment system to route all tasks through the Master Agent first.
+   3.3 Implement decision-making logic for the Master Agent to analyze tasks and   delegate them to the appropriate gener or specialized agents.
+   3.4 Inter-agent Communication:
+      - Develop a communication protocol that allows the Master Agent to coordinate with other agents effectively.
+   3.7 
+   3.8 Pause and and ask the user for feedback
+    4. Task Assignment Process:
    - When a user assigns a task:
      a. The system analyzes the task requirements.
      b. It selects the most appropriate agent(s) based on their capabilities and assigned models.
      c. If multiple agents are needed, it coordinates their efforts.
+5. 3. Model Behavior:
+   - Confirm that the Open Router integration is working
+   - Apply the direct API integration with Anthropic
+   - Test that prompt caching works with Anthropic API
+   - The user assigns the model, if none is assigned the AI assigns it
+   - Pause: Discuss progress with the user
 
 5. Agent Interaction:
-   - Pause: Discuss progress with the user
-   - Agents can communicate with each other to share information and subtasks.
+   - Agents can communicate with each other to share information and subtasks
    - They can also request human intervention when needed.
-
-6. Learning and Improvement:
+   - When thier task is complete, all general and specialized agents report thier data to the master agent 
+   - The Master Agent organizes the information into a useful response or contribution to satisfy the user's prompt
+   - The user may assign a number of automated iterations for the agents to attempt. This temporarly renmoves the Human in the Middlle factor, and allows agents to continue to problem solve, even if they encouter an error.
+   - At the end of the number of iterations, the Master Agent will report progress or challenges, as well as suggest the next step.
    - Pause: Discuss progress with the user
-   - Agents can learn from feedback and improve their performance over time.
-   - The system can suggest optimizations in agent assignments based on past performance.
-
+6. Template System:
+   6.1 Create a System for Prompt Templates
+   6.2 Prompt Template Model
+   6.3 API Endpoints for Prompt Templates
+   6.4 Frontend Integration
+   6.5 Agent Interaction with Templates
+   6.6 Pause and and ask the user for feedback
 7. Prompt Management:
-   - Pause: Discuss progress with the user
    - Agents use versioned prompts to guide their behavior and responses.
    - Prompts can be updated to refine agent capabilities without changing the underlying model.
-
+   - The model integrates directions in this priority:
+      a. Assigned task from the Master Agent
+      b. User prompt
+      c. Agent programing
+      c. System Prompt
+   - Pause: Discuss progress with the user
 8. Knowledge Building:
    - Pause: Discuss progress with the user
    - Each agent builds and maintains its own knowledge base.
    - The knowledge base includes:
-     a. Task history and outcomes
-     b. User feedback and preferences
-     c. Project-specific information
-     d. Relevant domain knowledge
+      a. Task history and outcomes
+      b. User feedback and preferences
+      c. Project-specific information
+      d. Relevant domain knowledge
    - Agents can reference and update their knowledge base during task execution.
    - Knowledge bases are persistent across sessions, allowing for continuous learning and improvement.
+4. Real Time Feedback
+    4.1 Allow the Master Agent to critique its own performance and report it to the user.
+    4.2 Extend the feedback and learning mechanisms to allow the Lead Agent to evaluate and optimize the performance of other agents.
+    4.3 After the Master Agent reports to the user, the user is asked one open ended question about the Agent's performance.
+    4.4 Create and test a mechanism for reccomending updates to agent behavior to the knowledge-base.
+    4.5 Use built in API calls to display the overall cost of the project in real time.
+    4.6 Pause and and ask the user for feedback
+5. Test the Agentic System Functions
+   5.1 Access and Modification Capabilities
+   5.2 Agent Suggestions and User Interaction
+   5.3 Delegating Agent Functionality
+   5.4 Test Knowledge Base Integration and Persistence
+   5.5 Pause and and ask the user for feedback
+6. Update UX/UI
+    6.1 Modify ChatInterface to support multi-agent interactions
+    6.2 Create interface for viewing and managing agent hierarchies
+    6.3 Implement visualization for task assignment and agent collaboration
+    6.4 Develop user interface for providing feedback and viewing agent performance
+10. User Feedback
+   10.1 Pause and await additional instructions from the user
+11. Improve State Management
+   11.1 Review State Management Practices
+   11.2 Correct State Updates After API Calls
+   11.3 Implement additional error handling and fallbacks for the OpenRouter integration
+   11.4 Implement additional error handling and fallbacks for the Anthropic integration
+   11.5 Verify that prompt caching works with the Anthropic Integration
+   11.6 Pause and and ask the user for feedback
+12. Performance Optimization
+   12.1 Implement Caching Strategies
+   12.2 Optimize Database Queries
+   12.3 Optimize Agent Communication
+   12.4 Optimize Knowledge Base Access and Updates
+   12.5 Pause and and ask the user for feedback
+13. Comprehensive Testing
+   13.1 Develop and Run Unit Tests
+   13.2 Implement Integration Tests
+   13.3 Pause and and ask the user for feedback
+14. Final Feedback
+   14.1 Pause and and ask the user for feedback
 
-## Current Task
-
-Implement an agentic model and enhance the overall system:
-
-1. Design and Implement an Agent Class
-   1.1 ✅ Create an Agent class with capabilities:
-
-   - Automated prompt management
-   - Intelligent project setup
-   - Dynamic code assistance
-   - Automated testing and debugging
-   - Continuous learning from user feedback
-     1.2 ✅ Integrate the Agent Class with the Backend
-     1.3 ✅ Develop a Frontend Interface for Agent Management
-     1.4 ✅ Implement Feedback Mechanism
-2. Implement AI Integration
-   2.1 ✅ Integrate OpenRouter for AI Model Selection
-   2.2 Integrate Direct Anthropic API with Caching
-   2.3 ✅ Seamless Model Switching
-   2.4 ✅ Error Handling and Fallbacks for OpenRouter API key
-   2.5 ✅ Implement individual model assignment for each agent
-3. Implement Prompt Versioning
-   3.1 ✅ Extend Prompt Model
-   3.2 ✅ API Endpoints for Prompt Versions
-   3.3 ✅ Frontend Integration
-   3.4 ✅ Agent Access to Prompt Versions
-4. Create a System for Prompt Templates
-   4.1 Prompt Template Model
-   4.2 API Endpoints for Prompt Templates
-   4.3 Frontend Integration
-   4.4 Agent Interaction with Templates
-5. Implement Knowledge Base for Agents
-   5.1 Design Knowledge Base Structure
-   5.2 Implement Knowledge Storage and Retrieval
-   5.3 Integrate Knowledge Base with Agent Decision Making
-   5.4 Develop Knowledge Sharing Mechanism Between Agents
-6. Test the Agentic System
-   6.1 Access and Modification Capabilities
-   6.2 Agent Suggestions and User Interaction
-   6.3 Delegating Agent Functionality
-   6.4 Test Knowledge Base Integration and Persistence
-7. Improve State Management
-   7.1 Review State Management Practices
-   7.2 Correct State Updates After API Calls
-8. Performance Optimization
-   8.1 Implement Caching Strategies
-   8.2 Optimize Database Queries
-   8.3 Optimize Agent Communication
-   8.4 Optimize Knowledge Base Access and Updates
-9. Comprehensive Testing
-   9.1 Develop Unit Tests
-   9.2 Implement Integration Tests
-   9.3 End-to-End Testing
-   9.4 Continuous Integration
-10. Documentation and User Guides
-    10.1 Developer Documentation
-    10.2 User Guides
-11. Deployment and Release Preparation
-    11.1 Deployment Setup
-    11.2 Release Notes and Versioning
-12. Implement Advanced Task Assignment System
-    12.1 Design and implement task analysis algorithm
-    12.2 Create agent selection mechanism based on task requirements
-    12.3 Implement multi-agent task coordination
-    12.4 Develop inter-agent communication system
-13. Implement Agent Learning and Improvement
-    13.1 Design feedback collection system
-    13.2 Implement performance tracking for agents
-    13.3 Create mechanism for updating agent behavior based on feedback
-    13.4 Develop system for suggesting agent optimizations
-14. Update User Interface for Advanced Agent System
-    14.1 Modify ChatInterface to support multi-agent interactions
-    14.2 Create interface for viewing and managing agent hierarchies
-    14.3 Implement visualization for task assignment and agent collaboration
-    14.4 Develop user interface for providing feedback and viewing agent performance
-
-## GUI
-
+## Completed
 1. ✅ Implemented AgentManager component with CRUD functionality
 2. ✅ Created and styled AgentManager component
 3. ✅ Implemented backend API endpoints for agent management in core.py
@@ -173,75 +153,61 @@ Implement an agentic model and enhance the overall system:
 28. ✅ Combined all component-specific CSS files into a single styles.css file
 29. ✅ Updated all components to use the combined styles.css file
 30. ✅ Added ChatInterface styles to the combined styles.css file
-
-Next steps:
-- Implement a task assignment system that analyzes requirements and selects appropriate agent(s)
-- Develop inter-agent communication mechanisms for task collaboration
-- Create a feedback loop for agent learning and improvement
-- Design and implement the knowledge base structure for agents
-- Implement additional error handling and fallbacks for the OpenRouter integration
-- Add caching mechanisms to improve performance
-- Consider creating tasks for future enhancements (pagination, search functionality, etc.)
-
-## Next Steps
-
-1. ✅ Begin implementing the Agent class as described in section 1.
-2. ✅ Set up the necessary backend infrastructure to support the Agent class.
-3. ✅ Start developing the frontend interface for Agent management.
-4. ✅ Remove the code tab and its associated functionality from the frontend.
-5. ✅ Implement the Feedback Mechanism for Agents:
+31. ✅ Begin implementing the Agent class as described in section 1.
+32. ✅ Set up the necessary backend infrastructure to support the Agent class.
+33. ✅ Start developing the frontend interface for Agent management.
+34. ✅ Remove the code tab and its associated functionality from the frontend.
+35. ✅ Implement the Feedback Mechanism for Agents:
    - Add a feedback form to the AgentManager component
    - Create an API endpoint for submitting feedback
    - Update the Agent class to store and process feedback
-6. ✅ Test the Agent Management functionality:
+36. ✅ Test the Agent Management functionality:
    - Create, read, update, and delete agents through the frontend
    - Verify that agents are correctly stored in the database
    - Test error handling and edge cases
    - Test the feedback submission and storage
-7. ✅ Begin work on AI Integration:
+37. ✅ Begin work on AI Integration:
    - Research OpenRouter API and its integration requirements
    - Start implementing OpenRouter integration in the backend
-8. ✅ Test the new API endpoints for AI model selection and agent chat:
+38. ✅ Test the new API endpoints for AI model selection and agent chat:
    - ✅ Verify that the `/api/ai_models` endpoint returns the list of available models
    - ✅ Test the `/api/agents/<agent_id>/set_model` endpoint to ensure it updates the agent's AI model
    - ✅ Test the `/api/agents/<agent_id>/chat` endpoint to ensure it processes user input and returns AI-generated responses
-9. ✅ Implement a mechanism for setting and managing the OpenRouter API key:
+39. ✅ Implement a mechanism for setting and managing the OpenRouter API key:
    - ✅ Create an API endpoint for setting the API key
    - ✅ Update the frontend to include an interface for entering the API key
    - ✅ Implement secure storage of the API key
-10. ✅ Update the backend to support individual model assignment for each agent:
+40. ✅ Update the backend to support individual model assignment for each agent:
     - ✅ Modify the AgentModel to include an assigned_model field
     - ✅ Update create_agent and update_agent API endpoints to handle the assigned model
-11. ✅ Update the frontend to use the new AI integration endpoints:
+41. ✅ Update the frontend to use the new AI integration endpoints:
     - ✅ Implement a dropdown or selection component for choosing AI models for each agent
     - ✅ Update App.js to manage current agent state
     - ✅ Create a chat interface for interacting with agents using their assigned models
-12. Implement additional error handling and fallbacks for the OpenRouter integration
-13. Add caching mechanisms to improve performance
-14. ✅ Implement Prompt Versioning:
+42. ✅ Implement Prompt Versioning:
     - ✅ Extend the Prompt model to include version information
     - ✅ Create API endpoints for managing prompt versions
     - ✅ Update the frontend to support prompt versioning
-15. Develop the task assignment and agent collaboration system:
-    - Implement task analysis and agent selection logic
-    - Create inter-agent communication channels
-    - Develop a system for coordinating multiple agents on complex tasks
-16. Design and implement the knowledge base for agents:
-    - Create a data structure for storing agent knowledge
-    - Implement methods for knowledge retrieval and update
-    - Integrate knowledge base with agent decision-making processes
-    - Develop a mechanism for sharing relevant knowledge between agents
-17. Begin implementing the Advanced Task Assignment System (Task 12)
-    - Start with designing the task analysis algorithm (12.1)
-    - Move on to creating the agent selection mechanism (12.2)
-18. Update the backend API to support the new task assignment process
-    - Modify existing endpoints or create new ones as needed
-    - Ensure proper error handling and logging
-19. Start working on the inter-agent communication system (12.4)
-    - Design the communication protocol
-    - Implement basic message passing between agents
-20. Update the frontend to reflect the new multi-agent system
-    - Modify the ChatInterface component to handle multiple agents
-    - Create a new component for visualizing agent hierarchies and task assignments
+43. Design and Implement an Agent Class
+   1.1 ✅ Create an Agent class with capabilities:
+   - Automated prompt management
+   - Intelligent project setup
+   - Dynamic code assistance
+   - Automated testing and debugging
+   - Continuous learning from user feedback
+     1.2 ✅ Integrate the Agent Class with the Backend
+     1.3 ✅ Develop a Frontend Interface for Agent Management
+     1.4 ✅ Implement Feedback Mechanism
+44. Implement AI Integration
+   2.1 ✅ Integrate OpenRouter for AI Model Selection
+   2.2 Integrate Direct Anthropic API with Caching
+   2.3 ✅ Seamless Model Switching
+   2.4 ✅ Error Handling and Fallbacks for OpenRouter API key
+   2.5 ✅ Implement individual model assignment for each agent
+45. Implement Prompt Versioning
+   3.1 ✅ Extend Prompt Model
+   3.2 ✅ API Endpoints for Prompt Versions
+   3.3 ✅ Frontend Integration
+   3.4 ✅ Agent Access to Prompt Versions
 
 This file will be updated as we make progress on implementing the agentic model and improving the overall functionality of the application.

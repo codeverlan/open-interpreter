@@ -83,6 +83,7 @@ class AgentModel(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     assigned_model = db.Column(db.String(100))
     capabilities = db.Column(db.Text)  # Store capabilities as a JSON string
+    is_lead_agent = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {
@@ -92,7 +93,8 @@ class AgentModel(db.Model):
             'project_id': self.project_id,
             'created_at': self.created_at.isoformat(),
             'assigned_model': self.assigned_model,
-            'capabilities': json.loads(self.capabilities) if self.capabilities else []
+            'capabilities': json.loads(self.capabilities) if self.capabilities else [],
+            'is_lead_agent': self.is_lead_agent
         }
 
 # ... (keep other model definitions)
@@ -105,6 +107,7 @@ class OpenInterpreter:
         self.projects_dir = '/root/open/projects'  # Directory to store project folders
         self.openrouter_client = None
         self.task_assignment_system = None
+        self.lead_agent = None
 
     def initialize_openrouter_client(self):
         with app.app_context():
@@ -117,9 +120,29 @@ class OpenInterpreter:
 
     def initialize_task_assignment_system(self):
         with app.app_context():
-            agents = AgentModel.query.all()
-            agent_instances = [Agent.from_dict(agent.to_dict()) for agent in agents]
-            self.task_assignment_system = TaskAssignmentSystem(agent_instances)
+            lead_agent_model = AgentModel.query.filter_by(is_lead_agent=True).first()
+            if not lead_agent_model:
+                # Create a new lead agent if one doesn't exist
+                lead_agent_model = AgentModel(
+                    name="Lead Agent",
+                    description="Lead agent for task assignment",
+                    project_id=Project.query.first().id,  # Assign to the first project for now
+                    assigned_model="openai/gpt-3.5-turbo",
+                    capabilities=json.dumps(["task_delegation"]),
+                    is_lead_agent=True
+                )
+                db.session.add(lead_agent_model)
+                db.session.commit()
+
+            self.lead_agent = Agent.from_dict(lead_agent_model.to_dict())
+            self.lead_agent.set_as_lead_agent()
+
+            other_agents = AgentModel.query.filter_by(is_lead_agent=False).all()
+            for agent_model in other_agents:
+                agent = Agent.from_dict(agent_model.to_dict())
+                self.lead_agent.add_managed_agent(agent)
+
+            self.task_assignment_system = TaskAssignmentSystem(self.lead_agent)
 
     def start_server(self, host='0.0.0.0', port=5159):
         """
@@ -154,7 +177,8 @@ class OpenInterpreter:
                     description=data.get('description', ''),
                     project_id=data['project_id'],
                     assigned_model=data.get('assigned_model'),
-                    capabilities=json.dumps(data.get('capabilities', []))
+                    capabilities=json.dumps(data.get('capabilities', [])),
+                    is_lead_agent=data.get('is_lead_agent', False)
                 )
                 db.session.add(new_agent)
                 db.session.commit()
@@ -176,6 +200,7 @@ class OpenInterpreter:
                 agent.description = data.get('description', agent.description)
                 agent.assigned_model = data.get('assigned_model', agent.assigned_model)
                 agent.capabilities = json.dumps(data.get('capabilities', []))
+                agent.is_lead_agent = data.get('is_lead_agent', agent.is_lead_agent)
                 
                 db.session.commit()
                 self.initialize_task_assignment_system()  # Reinitialize with updated agent
