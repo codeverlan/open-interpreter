@@ -8,6 +8,7 @@ import PromptManager from './components/PromptManager';
 import Terminal from './components/Terminal';
 import AgentManager from './components/AgentManager';
 import ProjectCreator from './components/ProjectCreator';
+import ApiKeyManager from './components/ApiKeyManager';
 import './styles.css';
 
 const API_BASE_URL = '/api';
@@ -84,7 +85,8 @@ function App() {
   const [isLoading, setIsLoading] = useState({
     settings: true,
     projects: true,
-    files: false
+    files: false,
+    aiModels: false
   });
   const [error, setError] = useState(null);
   const [currentProject, setCurrentProject] = useState(null);
@@ -93,6 +95,8 @@ function App() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState('/');
   const [activeTab, setActiveTab] = useState('chat');
+  const [aiModels, setAiModels] = useState([]);
+  const [currentAgent, setCurrentAgent] = useState(null);
 
   const handleApiError = useCallback((err, context) => {
     const errorMessage = `App: Error in ${context}: ${err.message}`;
@@ -183,12 +187,38 @@ function App() {
     }
   }, [handleApiError]);
 
+  const fetchAiModels = useCallback(async () => {
+    sendLog('App: fetchAiModels started');
+    setIsLoading(prevState => ({...prevState, aiModels: true}));
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai_models`);
+      sendLog(`App: fetchAiModels response status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      sendLog(`App: Received AI models data: ${JSON.stringify(data)}`);
+      if (data.success) {
+        setAiModels(data.models);
+        sendLog('App: AI models updated successfully');
+      } else {
+        throw new Error(data.error || 'Failed to fetch AI models');
+      }
+    } catch (err) {
+      handleApiError(err, 'AI Models');
+    } finally {
+      setIsLoading(prevState => ({...prevState, aiModels: false}));
+      sendLog('App: fetchAiModels completed');
+    }
+  }, [handleApiError]);
+
   useEffect(() => {
     sendLog('App: useEffect for fetchSettings and fetchProjects started');
     fetchSettings();
     fetchProjects();
+    fetchAiModels();
     sendLog('App: useEffect for fetchSettings and fetchProjects completed');
-  }, [fetchSettings, fetchProjects]);
+  }, [fetchSettings, fetchProjects, fetchAiModels]);
 
   useEffect(() => {
     sendLog('App: useEffect for fetchFiles started');
@@ -203,6 +233,7 @@ function App() {
     setCurrentProject(projectId);
     setCurrentPath('/');
     fetchFiles('/');
+    setCurrentAgent(null);
   };
 
   const handleFileSelect = (path) => {
@@ -223,6 +254,11 @@ function App() {
     sendLog(`App: handleProjectCreated called with: ${JSON.stringify(newProject)}`);
     setProjects([...projects, newProject]);
     setCurrentProject(newProject.id);
+  };
+
+  const handleAgentChange = (agent) => {
+    sendLog(`App: handleAgentChange called with: ${JSON.stringify(agent)}`);
+    setCurrentAgent(agent);
   };
 
   sendLog('App: Rendering main content');
@@ -265,7 +301,7 @@ function App() {
           <button onClick={() => setActiveTab('settings')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Settings</button>
         </nav>
         <div className="main-content">
-          {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} selectedFiles={selectedFiles} />}
+          {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} selectedFiles={selectedFiles} currentAgent={currentAgent} />}
           {activeTab === 'files' && (
             isLoading.files ? (
               <div className="loading">Loading files...</div>
@@ -281,7 +317,12 @@ function App() {
               </ErrorBoundary>
             )
           )}
-          {activeTab === 'settings' && <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />}
+          {activeTab === 'settings' && (
+            <>
+              <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />
+              <ApiKeyManager refreshAiModels={fetchAiModels} />
+            </>
+          )}
           {activeTab === 'docs' && <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
           {activeTab === 'outline' && <ProjectOutline apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
           {activeTab === 'prompts' && currentProject && (
@@ -290,7 +331,7 @@ function App() {
             </ErrorBoundary>
           )}
           {activeTab === 'terminal' && <Terminal apiEndpoint={API_BASE_URL} />}
-          {activeTab === 'agents' && <AgentManager />}
+          {activeTab === 'agents' && <AgentManager aiModels={aiModels} onAgentChange={handleAgentChange} currentProject={currentProject} />}
         </div>
       </div>
     </ErrorBoundary>

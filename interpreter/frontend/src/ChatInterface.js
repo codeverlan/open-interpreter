@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
-function ChatInterface({ apiEndpoint }) {
+function ChatInterface({ apiEndpoint, currentAgent }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,11 @@ function ChatInterface({ apiEndpoint }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ 
+          message,
+          agentId: currentAgent?.id,
+          model: currentAgent?.assigned_model
+        }),
       });
 
       if (!response.ok) {
@@ -74,7 +78,7 @@ function ChatInterface({ apiEndpoint }) {
         setIsLoading(false);
       }
     }
-  }, [apiEndpoint]);
+  }, [apiEndpoint, currentAgent]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -112,9 +116,9 @@ function ChatInterface({ apiEndpoint }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
-          disabled={isLoading}
+          disabled={isLoading || !currentAgent}
         />
-        <button type="submit" disabled={isLoading}>
+        <button type="submit" disabled={isLoading || !currentAgent}>
           {isLoading ? 'Sending...' : 'Send'}
         </button>
         {isLoading && (
@@ -123,6 +127,14 @@ function ChatInterface({ apiEndpoint }) {
           </button>
         )}
       </form>
+      {!currentAgent && (
+        <div className="warning">Please select an agent to start chatting.</div>
+      )}
+      {currentAgent && (
+        <div className="agent-info">
+          Current Agent: {currentAgent.name} (Model: {currentAgent.assigned_model || 'Not assigned'})
+        </div>
+      )}
     </div>
   );
 }

@@ -2,9 +2,10 @@
 
 from interpreter.core.environment import Environment
 from interpreter.core.skill import Skill
+from interpreter.core.openrouter_client import OpenRouterClient
 
 class Agent:
-    def __init__(self, name, description='', prompt='', ai_model='', skills=None, parent=None):
+    def __init__(self, name, description='', prompt='', ai_model='openai/gpt-3.5-turbo', skills=None, parent=None):
         self.id = None  # Will be set when saved to the database
         self.name = name
         self.description = description
@@ -17,6 +18,9 @@ class Agent:
         self.parameters = {}
         self.environment = None
         self.performance_history = []
+        self.openrouter_client = OpenRouterClient()
+        self.capabilities = []  # New attribute for task assignment
+        self.current_task = None  # New attribute to track current task
 
     def add_skill(self, skill):
         if isinstance(skill, Skill):
@@ -79,6 +83,69 @@ class Agent:
         
         return evaluation
 
+    def get_ai_response(self, messages):
+        """
+        Get an AI-powered response using OpenRouter.
+        """
+        try:
+            response = self.openrouter_client.chat_completion(messages, self.ai_model)
+            return response['choices'][0]['message']['content']
+        except Exception as e:
+            print(f"Error getting AI response: {str(e)}")
+            return None
+
+    def process_input(self, user_input):
+        """
+        Process user input and generate a response using AI.
+        """
+        messages = [
+            {"role": "system", "content": self.prompt},
+            {"role": "user", "content": user_input}
+        ]
+        return self.get_ai_response(messages)
+
+    def add_capability(self, capability):
+        """
+        Add a new capability to the agent.
+        """
+        if capability not in self.capabilities:
+            self.capabilities.append(capability)
+
+    def remove_capability(self, capability):
+        """
+        Remove a capability from the agent.
+        """
+        if capability in self.capabilities:
+            self.capabilities.remove(capability)
+
+    def can_handle_task(self, task):
+        """
+        Check if the agent can handle a given task based on its capabilities.
+        """
+        required_capabilities = task.get('required_capabilities', [])
+        return all(cap in self.capabilities for cap in required_capabilities)
+
+    def assign_task(self, task):
+        """
+        Assign a task to the agent.
+        """
+        if self.can_handle_task(task):
+            self.current_task = task
+            return True
+        return False
+
+    def complete_task(self):
+        """
+        Complete the current task and return the result.
+        """
+        if self.current_task:
+            # Here you would implement the logic to complete the task
+            # For now, we'll just return a placeholder result
+            result = f"Task '{self.current_task.get('name', 'Unknown')}' completed by {self.name}"
+            self.current_task = None
+            return result
+        return "No task assigned"
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -90,7 +157,9 @@ class Agent:
             'parent': self.parent.id if self.parent else None,
             'sub_agents': [agent.id for agent in self.sub_agents],
             'state': self.state,
-            'parameters': self.parameters
+            'parameters': self.parameters,
+            'capabilities': self.capabilities,
+            'current_task': self.current_task
         }
 
     @classmethod
@@ -99,13 +168,15 @@ class Agent:
             name=data.get('name'),
             description=data.get('description', ''),
             prompt=data.get('prompt', ''),
-            ai_model=data.get('ai_model', ''),
+            ai_model=data.get('ai_model', 'openai/gpt-3.5-turbo'),
             skills=None,  # Skills will be added separately
             parent=None  # Parent assignment can be handled separately if needed
         )
         agent.id = data.get('id')
         agent.state = data.get('state', {})
         agent.parameters = data.get('parameters', {})
+        agent.capabilities = data.get('capabilities', [])
+        agent.current_task = data.get('current_task')
         return agent
 
     def __repr__(self):

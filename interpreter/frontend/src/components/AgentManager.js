@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './AgentManager.css';
 
 const API_BASE_URL = '/api';
 
@@ -8,13 +7,16 @@ const AgentManager = () => {
   const [agents, setAgents] = useState([]);
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentDescription, setNewAgentDescription] = useState('');
+  const [newAgentModel, setNewAgentModel] = useState('');
   const [editingAgent, setEditingAgent] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiModels, setAiModels] = useState([]);
 
   useEffect(() => {
     fetchAgents();
+    fetchAiModels();
   }, []);
 
   useEffect(() => {
@@ -41,6 +43,16 @@ const AgentManager = () => {
     }
   };
 
+  const fetchAiModels = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/ai_models`);
+      setAiModels(response.data.models);
+    } catch (err) {
+      console.error('Error fetching AI models:', err);
+      setError('Failed to fetch AI models. Please try again.');
+    }
+  };
+
   const createAgent = async (e) => {
     e.preventDefault();
     setError(null);
@@ -49,10 +61,12 @@ const AgentManager = () => {
       const response = await axios.post(`${API_BASE_URL}/agents`, {
         name: newAgentName,
         description: newAgentDescription,
+        assigned_model: newAgentModel,
       });
       setAgents([...agents, response.data.agent]);
       setNewAgentName('');
       setNewAgentDescription('');
+      setNewAgentModel('');
       setSuccess('Agent created successfully.');
     } catch (err) {
       console.error('Error creating agent:', err);
@@ -68,6 +82,7 @@ const AgentManager = () => {
       const response = await axios.put(`${API_BASE_URL}/agents/${editingAgent.id}`, {
         name: editingAgent.name,
         description: editingAgent.description,
+        assigned_model: editingAgent.assigned_model,
       });
       setAgents(agents.map(agent => agent.id === editingAgent.id ? response.data.agent : agent));
       setEditingAgent(null);
@@ -127,12 +142,25 @@ const AgentManager = () => {
                       className="agent-input"
                       required
                     />
+                    <select
+                      value={editingAgent.assigned_model}
+                      onChange={(e) => setEditingAgent({ ...editingAgent, assigned_model: e.target.value })}
+                      className="agent-input"
+                      required
+                    >
+                      <option value="">Select AI Model</option>
+                      {aiModels.map((model) => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
                     <button type="submit">Save</button>
                     <button onClick={() => setEditingAgent(null)}>Cancel</button>
                   </form>
                 ) : (
                   <>
                     <strong>{agent.name}</strong>: {agent.description}
+                    <br />
+                    <strong>Model:</strong> {agent.assigned_model || 'Not assigned'}
                     <button onClick={() => setEditingAgent(agent)} className="edit-button">Edit</button>
                     <button onClick={() => deleteAgent(agent.id)} className="delete-button">Delete</button>
                   </>
@@ -161,6 +189,17 @@ const AgentManager = () => {
             required
             className="agent-input"
           />
+          <select
+            value={newAgentModel}
+            onChange={(e) => setNewAgentModel(e.target.value)}
+            required
+            className="agent-input"
+          >
+            <option value="">Select AI Model</option>
+            {aiModels.map((model) => (
+              <option key={model} value={model}>{model}</option>
+            ))}
+          </select>
           <button type="submit" className="create-button">Create Agent</button>
         </form>
       </div>

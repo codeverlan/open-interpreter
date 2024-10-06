@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import './PromptManager.css';
 
 const PromptManager = ({ projectId }) => {
   const [prompts, setPrompts] = useState([]);
@@ -10,6 +9,8 @@ const PromptManager = ({ projectId }) => {
   const [defaultSystemMessage, setDefaultSystemMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedPrompt, setSelectedPrompt] = useState(null);
+  const [promptVersions, setPromptVersions] = useState([]);
 
   const fetchPrompts = useCallback(async () => {
     if (!projectId) return;
@@ -36,6 +37,21 @@ const PromptManager = ({ projectId }) => {
     } catch (error) {
       setError('Error fetching default system message. Please try again.');
       console.error('Error fetching default system message:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId]);
+
+  const fetchPromptVersions = useCallback(async (promptId) => {
+    if (!projectId || !promptId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`/api/projects/${projectId}/prompts/${promptId}/versions`);
+      setPromptVersions(response.data.versions);
+    } catch (error) {
+      setError('Error fetching prompt versions. Please try again.');
+      console.error('Error fetching prompt versions:', error);
     } finally {
       setIsLoading(false);
     }
@@ -73,18 +89,19 @@ const PromptManager = ({ projectId }) => {
     setIsLoading(true);
     setError(null);
     try {
-      await axios.put(`/api/projects/${projectId}/prompts/${editingPrompt.id}`, editingPrompt);
+      const response = await axios.put(`/api/projects/${projectId}/prompts/${editingPrompt.id}`, editingPrompt);
       setPrompts(prevPrompts =>
-        prevPrompts.map(p => (p.id === editingPrompt.id ? editingPrompt : p))
+        prevPrompts.map(p => (p.id === editingPrompt.id ? response.data.prompt : p))
       );
       setEditingPrompt(null);
+      fetchPromptVersions(editingPrompt.id);
     } catch (error) {
       setError('Error updating prompt. Please try again.');
       console.error('Error updating prompt:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, editingPrompt]);
+  }, [projectId, editingPrompt, fetchPromptVersions]);
 
   const handleDeletePrompt = useCallback(async (promptId) => {
     setIsLoading(true);
@@ -92,6 +109,8 @@ const PromptManager = ({ projectId }) => {
     try {
       await axios.delete(`/api/projects/${projectId}/prompts/${promptId}`);
       setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
+      setSelectedPrompt(null);
+      setPromptVersions([]);
     } catch (error) {
       setError('Error deleting prompt. Please try again.');
       console.error('Error deleting prompt:', error);
@@ -119,6 +138,26 @@ const PromptManager = ({ projectId }) => {
       setIsLoading(false);
     }
   }, [projectId, defaultSystemMessage]);
+
+  const handleSelectPrompt = useCallback((prompt) => {
+    setSelectedPrompt(prompt);
+    fetchPromptVersions(prompt.id);
+  }, [fetchPromptVersions]);
+
+  const handleActivateVersion = useCallback(async (versionId) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await axios.post(`/api/projects/${projectId}/prompts/${selectedPrompt.id}/versions/${versionId}/activate`);
+      fetchPromptVersions(selectedPrompt.id);
+      fetchPrompts();
+    } catch (error) {
+      setError('Error activating prompt version. Please try again.');
+      console.error('Error activating prompt version:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, selectedPrompt, fetchPromptVersions, fetchPrompts]);
 
   const debouncedSetNewPrompt = useMemo(
     () => debounce((field, value) => setNewPrompt(prev => ({ ...prev, [field]: value })), 300),
@@ -203,11 +242,29 @@ const PromptManager = ({ projectId }) => {
                 <p>{prompt.content}</p>
                 <button onClick={() => setEditingPrompt(prompt)} disabled={isLoading}>Edit</button>
                 <button onClick={() => handleDeletePrompt(prompt.id)} disabled={isLoading}>Delete</button>
+                <button onClick={() => handleSelectPrompt(prompt)} disabled={isLoading}>View Versions</button>
               </>
             )}
           </div>
         ))}
       </div>
+
+      {selectedPrompt && (
+        <div className="prompt-versions">
+          <h3>Versions for {selectedPrompt.name}</h3>
+          {promptVersions.map((version) => (
+            <div key={version.id} className="version-item">
+              <p>Version {version.version} {version.is_active ? '(Active)' : ''}</p>
+              <p>{version.content}</p>
+              {!version.is_active && (
+                <button onClick={() => handleActivateVersion(version.id)} disabled={isLoading}>
+                  Activate
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
