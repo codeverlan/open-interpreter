@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaFolder, FaFile, FaArrowUp } from 'react-icons/fa';
 
-const FileBrowser = ({ files, onFileSelect, currentPath }) => {
+const FileBrowser = ({ files, onFileSelect, currentPath, onFileCheck, selectedFiles }) => {
   const handleFileClick = (file) => {
     console.log('Clicked file:', file);
     try {
@@ -26,6 +26,10 @@ const FileBrowser = ({ files, onFileSelect, currentPath }) => {
     }
   };
 
+  const handleCheckboxChange = (file, isChecked) => {
+    onFileCheck(file, isChecked);
+  };
+
   console.log('Rendering FileBrowser with files:', files);
 
   return (
@@ -39,14 +43,21 @@ const FileBrowser = ({ files, onFileSelect, currentPath }) => {
           </li>
         )}
         {Array.isArray(files) ? files.map((file, index) => (
-          <li key={index} onClick={() => handleFileClick(file)}>
-            {file && typeof file === 'object' && typeof file.name === 'string' ? (
-              <>
-                {file.type === 'directory' ? <FaFolder /> : <FaFile />} {file.name}
-              </>
-            ) : (
-              <span>Invalid file object</span>
-            )}
+          <li key={index}>
+            <input
+              type="checkbox"
+              checked={selectedFiles.includes(file.name)}
+              onChange={(e) => handleCheckboxChange(file.name, e.target.checked)}
+            />
+            <span onClick={() => handleFileClick(file)}>
+              {file && typeof file === 'object' && typeof file.name === 'string' ? (
+                <>
+                  {file.type === 'directory' ? <FaFolder /> : <FaFile />} {file.name}
+                </>
+              ) : (
+                <span>Invalid file object</span>
+              )}
+            </span>
           </li>
         )) : (
           <li>No files to display</li>

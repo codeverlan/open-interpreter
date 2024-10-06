@@ -1,0 +1,134 @@
+.agent-manager {
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.agent-manager h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.agent-manager h3 {
+  color: #444;
+  margin-top: 20px;
+}
+
+.message {
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.loading {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 20px;
+}
+
+.refresh-button {
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.refresh-button:hover {
+  background-color: #1976d2;
+}
+
+.agent-list {
+  margin-bottom: 30px;
+}
+
+.agent-item {
+  background-color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.agent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.create-button, .edit-button, .delete-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.create-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.create-button:hover {
+  background-color: #45a049;
+}
+
+.edit-button {
+  background-color: #ffc107;
+  color: black;
+  margin-right: 10px;
+}
+
+.edit-button:hover {
+  background-color: #ffb300;
+}
+
+.delete-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #d32f2f;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.create-agent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}

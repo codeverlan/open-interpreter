@@ -3,10 +3,11 @@ import ChatInterface from './ChatInterface';
 import FileBrowser from './FileBrowser';
 import SettingsPanel from './SettingsPanel';
 import DocumentationViewer from './DocumentationViewer';
-import ProjectStatus from './components/ProjectStatus';
+import ProjectOutline from './components/ProjectOutline';
 import PromptManager from './components/PromptManager';
-import LogViewer from './components/LogViewer';
+import Terminal from './components/Terminal';
 import AgentManager from './components/AgentManager';
+import ProjectCreator from './components/ProjectCreator';
 import './styles.css';
 
 const API_BASE_URL = '/api';
@@ -89,6 +90,7 @@ function App() {
   const [currentProject, setCurrentProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [files, setFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState('/');
   const [activeTab, setActiveTab] = useState('chat');
 
@@ -208,6 +210,21 @@ function App() {
     fetchFiles(path);
   };
 
+  const handleFileCheck = (file, isChecked) => {
+    sendLog(`App: handleFileCheck called with: ${file}, ${isChecked}`);
+    if (isChecked) {
+      setSelectedFiles(prev => [...prev, file]);
+    } else {
+      setSelectedFiles(prev => prev.filter(f => f !== file));
+    }
+  };
+
+  const handleProjectCreated = (newProject) => {
+    sendLog(`App: handleProjectCreated called with: ${JSON.stringify(newProject)}`);
+    setProjects([...projects, newProject]);
+    setCurrentProject(newProject.id);
+  };
+
   sendLog('App: Rendering main content');
   sendLog(`App: Current state - isLoading: ${JSON.stringify(isLoading)}, error: ${error}, config: ${JSON.stringify(config)}`);
 
@@ -224,7 +241,7 @@ function App() {
   sendLog('App: Rendering main content');
   return (
     <ErrorBoundary>
-      <div className="App container">
+      <div className="App container" style={{ backgroundColor: '#f0f0f0', color: '#333' }}>
         <h1>{config.project_name || "Open Interpreter"}</h1>
         <div className="project-selector">
           <select value={currentProject || ''} onChange={(e) => handleProjectChange(e.target.value)}>
@@ -235,37 +252,44 @@ function App() {
               </option>
             ))}
           </select>
+          <ProjectCreator onProjectCreated={handleProjectCreated} />
         </div>
         <nav>
-          <button onClick={() => setActiveTab('chat')}>Chat</button>
-          <button onClick={() => setActiveTab('files')}>Files</button>
-          <button onClick={() => setActiveTab('settings')}>Settings</button>
-          <button onClick={() => setActiveTab('docs')}>Docs</button>
-          <button onClick={() => setActiveTab('status')}>Status</button>
-          <button onClick={() => setActiveTab('prompts')}>Prompts</button>
-          <button onClick={() => setActiveTab('logs')}>Logs</button>
-          <button onClick={() => setActiveTab('agents')}>Agents</button>
+          <button onClick={() => setActiveTab('chat')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Chat</button>
+          <button onClick={() => setActiveTab('files')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Files</button>
+          <button onClick={() => setActiveTab('agents')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Agents</button>
+          <button onClick={() => setActiveTab('docs')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Docs</button>
+          <button onClick={() => setActiveTab('outline')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Outline</button>
+          <button onClick={() => setActiveTab('prompts')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Prompts</button>
+          <button onClick={() => setActiveTab('terminal')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Terminal</button>
+          <button onClick={() => setActiveTab('settings')} style={{ fontSize: '1.2em', padding: '10px 20px' }}>Settings</button>
         </nav>
         <div className="main-content">
-          {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} />}
+          {activeTab === 'chat' && <ChatInterface apiEndpoint={`${API_BASE_URL}/chat`} currentProject={currentProject} selectedFiles={selectedFiles} />}
           {activeTab === 'files' && (
             isLoading.files ? (
               <div className="loading">Loading files...</div>
             ) : (
               <ErrorBoundary>
-                <FileBrowser files={files} onFileSelect={handleFileSelect} currentPath={currentPath} />
+                <FileBrowser 
+                  files={files} 
+                  onFileSelect={handleFileSelect} 
+                  currentPath={currentPath} 
+                  onFileCheck={handleFileCheck}
+                  selectedFiles={selectedFiles}
+                />
               </ErrorBoundary>
             )
           )}
           {activeTab === 'settings' && <SettingsPanel apiEndpoint={`${API_BASE_URL}/get_settings`} currentProject={currentProject} />}
           {activeTab === 'docs' && <DocumentationViewer apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
-          {activeTab === 'status' && <ProjectStatus apiEndpoint={API_BASE_URL} />}
+          {activeTab === 'outline' && <ProjectOutline apiEndpoint={API_BASE_URL} currentProject={currentProject} />}
           {activeTab === 'prompts' && currentProject && (
             <ErrorBoundary>
               <PromptManager projectId={currentProject} />
             </ErrorBoundary>
           )}
-          {activeTab === 'logs' && <LogViewer />}
+          {activeTab === 'terminal' && <Terminal apiEndpoint={API_BASE_URL} />}
           {activeTab === 'agents' && <AgentManager />}
         </div>
       </div>

@@ -8,6 +8,7 @@ This project extends the Open Interpreter with a React front-end, providing a us
 - Code editor for writing and executing code
 - File browser for navigating the file system
 - Settings panel for configuring the interpreter
+- Agent Manager for creating, updating, and deleting AI agents
 - Modular architecture for easier maintenance and updates
 
 ## Prerequisites
@@ -52,6 +53,7 @@ The project is structured to be modular and easy to maintain:
 - `server/api.py`: Contains the Flask server and API endpoints.
 - `frontend_config.yaml`: Configuration file for frontend-specific settings.
 - `frontend/src/`: React components for the user interface.
+- `docs/`: Contains documentation for various features, including the AgentManager.
 
 To modify the API endpoints, update the routes in `interpreter/server/api.py`.
 To change the front-end components, edit the files in `interpreter/frontend/src`.
@@ -68,6 +70,10 @@ When the original Open Interpreter is updated:
 
 - `sample_config.yaml`: Contains the main configuration for the interpreter.
 - `frontend_config.yaml`: Contains frontend-specific settings and API endpoint configurations.
+
+## Documentation
+
+Detailed documentation for specific features can be found in the `docs/` directory. For information about the Agent Manager, refer to `docs/AgentManager.md`.
 
 ## Contributing
 

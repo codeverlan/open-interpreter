@@ -31,6 +31,7 @@ name
 proficiency
 Implement the execute(agent, *args, **kwargs) method within the Skill class to perform skill-specific actions.
 Create a library of common skills (e.g., DataProcessingSkill, NavigationSkill) that inherit from the Skill class.
+
 1.3 Create the Environment Interface
 Objective: Enable agents to interact with the environment abstractly.
 Tasks:
@@ -46,6 +47,7 @@ Implement delegation methods:
 delegate_task(supervisor, sub_agent, task)
 Implement evaluation methods:
 evaluate_sub_agent(sub_agent, result)
+
 Phase 2: Implement Agent Capabilities
 2.1 Equip Agents with Competence and Skills
 Objective: Provide agents with specific abilities through skills.
