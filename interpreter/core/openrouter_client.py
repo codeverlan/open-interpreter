@@ -1,12 +1,16 @@
 import requests
 import os
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class OpenRouterClient:
     BASE_URL = "https://openrouter.ai/api/v1"
 
     def __init__(self):
-        self.api_key = os.environ.get("OPENROUTER_API_KEY")
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
 
     def set_api_key(self, api_key: str):
         self.api_key = api_key
@@ -55,9 +59,10 @@ class OpenRouterClient:
         }
         return self._make_request("/completions", method="POST", data=data)
 
+# Initialize the OpenRouterClient
+openrouter_client = OpenRouterClient()
+
 # Example usage:
-# client = OpenRouterClient()
-# client.set_api_key("your-api-key-here")
-# available_models = client.get_available_models()
-# chat_response = client.chat_completion([{"role": "user", "content": "Hello, how are you?"}], "openai/gpt-3.5-turbo")
-# text_response = client.text_completion("Once upon a time", "openai/gpt-3.5-turbo")
+# available_models = openrouter_client.get_available_models()
+# chat_response = openrouter_client.chat_completion([{"role": "user", "content": "Hello, how are you?"}], "openai/gpt-3.5-turbo")
+# text_response = openrouter_client.text_completion("Once upon a time", "openai/gpt-3.5-turbo")

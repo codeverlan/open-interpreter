@@ -95,6 +95,7 @@ Agents persist between tasks, share knowledge and self improve.
    - Test the feedback submission and storage
 37. ✅ Begin work on AI Integration:
    - Research OpenRouter API and its integration requirements
+   - Research Anthropic's API and its integration requirements
    - Start implementing OpenRouter integration in the backend
 38. ✅ Test the new API endpoints for AI model selection and agent chat:
    - ✅ Verify that the `/api/ai_models` endpoint returns the list of available models

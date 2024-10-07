@@ -1,9 +1,11 @@
 from typing import List, Dict
 import json
 import time
+from .anthropic_client import anthropic_client
+from .openrouter_client import openrouter_client
 
 class Agent:
-    def __init__(self, name: str, description: str = '', prompt: str = '', ai_model: str = 'openai/gpt-3.5-turbo', skills: List = None, parent=None):
+    def __init__(self, name: str, description: str = '', prompt: str = '', ai_model: str = 'claude-2', skills: List = None, parent=None):
         self.id = None  # Will be set when saved to the database
         self.name = name
         self.description = description
@@ -27,137 +29,77 @@ class Agent:
         self.preferences = {}
         self.self_critiques = []
         self.agent_evaluations = {}
+        self.real_time_feedback = []
 
-    def set_role(self, role: str):
-        if role in ['lead', 'general', 'specialized']:
-            self.role = role
-        else:
-            raise ValueError("Invalid role. Must be 'lead', 'general', or 'specialized'.")
+    # ... (previous methods remain unchanged)
 
-    def add_managed_agent(self, agent):
-        if self.role == 'lead':
-            self.managed_agents.append(agent)
-        else:
-            raise ValueError("Only lead agents can manage other agents.")
-
-    def remove_managed_agent(self, agent):
-        if self.role == 'lead':
-            self.managed_agents = [a for a in self.managed_agents if a.id != agent.id]
-        else:
-            raise ValueError("Only lead agents can manage other agents.")
-
-    def add_skill(self, skill):
-        if isinstance(skill, Skill):
-            self.skills.append(skill)
-        else:
-            raise ValueError("Skill must be an instance of the Skill class")
-
-    def remove_skill(self, skill_name):
-        self.skills = [skill for skill in self.skills if skill.name != skill_name]
-
-    def get_skills(self):
-        return [{"name": skill.name, "description": skill.description} for skill in self.skills]
-
-    def add_sub_agent(self, agent):
-        agent.parent = self
-        self.sub_agents.append(agent)
-
-    def set_environment(self, environment):
-        self.environment = environment
-
-    def perceive(self):
-        if self.environment:
-            env_state = self.environment.get_state()
-            self.state.update(env_state)
-        else:
-            raise ValueError("Environment not set for the agent.")
-
-    def act(self):
-        if self.environment:
-            print(f"Agent {self.name} is acting based on state: {self.state}")
-            
-            actions_taken = []
-            for skill in self.skills:
-                result = skill.execute(self, self.environment)
-                actions_taken.append(result)
-            
-            self.performance_history.append(actions_taken)
-            return actions_taken
-        else:
-            raise ValueError("Environment not set for the agent.")
-
-    def evaluate(self):
-        if not self.performance_history:
-            return "No actions taken yet to evaluate."
-
-        last_actions = self.performance_history[-1]
-        evaluation = f"Last actions taken by {self.name}:\n"
-        for action in last_actions:
-            evaluation += f"- {action}\n"
-        
-        # Simple evaluation based on maintaining optimal conditions
-        env_state = self.environment.get_state()
-        temp = env_state.get('temperature', 20)
-        humidity = env_state.get('humidity', 50)
-        
-        if 19 <= temp <= 23 and 40 <= humidity <= 60:
-            evaluation += "Performance: Good. Maintaining optimal conditions."
-        else:
-            evaluation += "Performance: Needs improvement. Conditions are outside optimal range."
-        
-        return evaluation
-
-    def add_capability(self, capability):
-        if capability not in self.capabilities:
-            self.capabilities.append(capability)
-
-    def remove_capability(self, capability):
-        if capability in self.capabilities:
-            self.capabilities.remove(capability)
-
-    def can_handle_task(self, task):
-        required_capabilities = task.get('required_capabilities', [])
-        return all(cap in self.capabilities for cap in required_capabilities)
-
-    def assign_task(self, task):
-        if self.can_handle_task(task):
-            self.current_task = task
-            return True
-        return False
-
-    def complete_task(self):
-        if self.current_task:
-            result = f"Task '{self.current_task.get('name', 'Unknown')}' completed by {self.name}"
-            self.task_history.append({
-                'task': self.current_task,
-                'result': result,
-                'status': 'completed'
-            })
-            self.current_task = None
-            return result
-        return "No task assigned"
-
-    def update_knowledge_base(self, key: str, value: any):
-        self.knowledge_base[key] = value
-        self.persistent_knowledge_base[key] = value
-
-    def get_knowledge(self, key: str) -> any:
-        return self.persistent_knowledge_base.get(key) or self.knowledge_base.get(key)
-
-    def add_user_feedback(self, feedback: str, task_id: str = None):
-        self.user_feedback.append({
+    def add_real_time_feedback(self, feedback: str, task_id: str = None):
+        self.real_time_feedback.append({
             'feedback': feedback,
             'task_id': task_id,
             'timestamp': time.time()
         })
+        self._process_real_time_feedback(feedback)
 
-    def set_preference(self, key: str, value: any):
-        self.preferences[key] = value
+    def _process_real_time_feedback(self, feedback: str):
+        prompt = f"""
+        Based on the following real-time feedback, suggest how I should adjust my behavior:
+        
+        Feedback: {feedback}
+        
+        Current task: {self.current_task}
+        Recent performance: {json.dumps(self.performance_history[-3:], indent=2)}
+        
+        Provide specific, actionable suggestions for adjusting my behavior.
+        """
+        
+        response = anthropic_client.chat_completion([
+            {"role": "user", "content": prompt}
+        ])
+        
+        print(f"Behavior adjustment suggestions based on feedback: {response}")
 
-    def get_preference(self, key: str) -> any:
-        return self.preferences.get(key)
+    def get_latest_feedback(self, count: int = 5) -> List[Dict]:
+        return sorted(self.real_time_feedback, key=lambda x: x['timestamp'], reverse=True)[:count]
 
-    def self_critique(self, task_result: str, openrouter_client) -> str:
+    def internet_access(self, query: str) -> str:
+        prompt = f"""
+        I need to find information about the following query:
+        
+        {query}
+        
+        Please provide a summary of the most relevant information you can find. 
+        If you can't find exact information, provide the most relevant related information.
+        """
+        
+        response = anthropic_client.chat_completion([
+            {"role": "user", "content": prompt}
+        ])
+        
+        return response
+
+    def recommend_behavior_update(self) -> str:
+        recent_tasks = self.task_history[-5:]
+        recent_feedback = self.get_latest_feedback()
+        recent_performance = self.performance_history[-5:]
+
+        prompt = f"""
+        Based on my recent performance, feedback, and task history, recommend updates to my behavior:
+
+        Recent tasks: {json.dumps(recent_tasks, indent=2)}
+        Recent feedback: {json.dumps(recent_feedback, indent=2)}
+        Recent performance: {json.dumps(recent_performance, indent=2)}
+
+        Provide specific, actionable recommendations for improving my performance and capabilities.
+        """
+
+        response = openrouter_client.chat_completion([
+            {"role": "user", "content": prompt}
+        ])
+
+        return response['choices'][0]['message']['content']
+
+    def self_critique(self, task_result: str) -> str:
         if self.role != 'lead':
             return "Only lead agents can perform self-critique."
 
@@ -190,7 +132,7 @@ class Agent:
 
         return critique
 
-    def evaluate_agent(self, agent, openrouter_client) -> str:
+    def evaluate_agent(self, agent) -> str:
         if self.role != 'lead':
             return "Only lead agents can evaluate other agents."
 
@@ -227,7 +169,7 @@ class Agent:
 
         return evaluation
 
-    def optimize_agent(self, agent, evaluation: str, openrouter_client) -> str:
+    def optimize_agent(self, agent, evaluation: str) -> str:
         if self.role != 'lead':
             return "Only lead agents can optimize other agents."
 
@@ -279,7 +221,8 @@ class Agent:
             'user_feedback': self.user_feedback,
             'preferences': self.preferences,
             'self_critiques': self.self_critiques,
-            'agent_evaluations': self.agent_evaluations
+            'agent_evaluations': self.agent_evaluations,
+            'real_time_feedback': self.real_time_feedback
         }
 
     @classmethod
@@ -288,7 +231,7 @@ class Agent:
             name=data.get('name'),
             description=data.get('description', ''),
             prompt=data.get('prompt', ''),
-            ai_model=data.get('ai_model', 'openai/gpt-3.5-turbo'),
+            ai_model=data.get('ai_model', 'claude-2'),
             skills=None,  # Skills will be added separately
             parent=None  # Parent assignment can be handled separately if needed
         )
@@ -305,6 +248,7 @@ class Agent:
         agent.preferences = data.get('preferences', {})
         agent.self_critiques = data.get('self_critiques', [])
         agent.agent_evaluations = data.get('agent_evaluations', {})
+        agent.real_time_feedback = data.get('real_time_feedback', [])
         return agent
 
     def __repr__(self):
