@@ -33,21 +33,18 @@ Agents persist between tasks, share knowledge and self improve.
    - Enhance specialized agent capabilities:
      - Implement internet access for specialized agents
 
-4. Performance Optimization:
-   - Implement Caching Strategies
-   - Optimize Database Queries
-   - Optimize Agent Communication
-   - Optimize Knowledge Base Access and Updates
 
-5. Comprehensive Testing:
-   - Develop and Run Unit Tests for all components
-   - Implement Integration Tests
-   - Perform end-to-end testing of the entire system
 
-6. Final Review and Documentation:
-   - Review all implemented features
-   - Update documentation
-   - Prepare for user testing and feedback
+## To Do
+
+
+## Views
+- Individual project screen
+
+## Features
+
+
+Note: Do not start on Views or Features until detailed specifications are provided. Always prioritize tasks in the order: To Do, Views, Features.
 
 ## Completed
 1. ✅ Implemented AgentManager component with CRUD functionality
@@ -215,5 +212,6 @@ Agents persist between tasks, share knowledge and self improve.
    - ✅ Modify TaskAssignmentSystem to use these new evaluation and optimization capabilities
    - ✅ Update API endpoints to expose this new functionality
    - ✅ Modify the frontend to display the evaluation results and optimization suggestions
+64. ✅ Fix dark mode
 
 This file will be updated as we make progress on implementing the agentic model and improving the overall functionality of the application.
