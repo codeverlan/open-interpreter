@@ -1,4 +1,3 @@
-```python
 # /root/open/interpreter/server/api.py
 
 import logging
@@ -12,12 +11,14 @@ from interpreter.core.models.prompt import Prompt
 from interpreter.core.database import Database
 from interpreter.core.log_handler import LogHandler
 from interpreter.core.agent import Agent
+from interpreter.core.anthropic_client import anthropic_client
+from interpreter.core.openrouter_client import openrouter_client
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(module)s] %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] [%(levelname)s] [%(module)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 def create_app():
@@ -48,16 +49,28 @@ def create_app():
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        logger.info(f"Requested path: {path}")
-        log_handler.add_log(f"[INFO] [API] Requested path: {path}")
+        logger.debug(f"Requested path: {path}")
+        logger.debug(f"Static folder: {app.static_folder}")
+        log_handler.add_log(f"[DEBUG] [API] Requested path: {path}")
+        
         if path.startswith('api/'):
+            logger.debug(f"Handling API request: {path}")
             return handle_api_request(path)
-        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-            logger.info(f"Serving file: {os.path.join(app.static_folder, path)}")
+        
+        file_path = os.path.join(app.static_folder, path)
+        logger.debug(f"Checking file path: {file_path}")
+        
+        if path != "" and os.path.exists(file_path):
+            logger.debug(f"Serving file: {file_path}")
             return send_from_directory(app.static_folder, path)
         else:
-            logger.info(f"Serving index.html")
-            return send_from_directory(app.static_folder, 'index.html')
+            index_path = os.path.join(app.static_folder, 'index.html')
+            logger.debug(f"Serving index.html: {index_path}")
+            if os.path.exists(index_path):
+                return send_from_directory(app.static_folder, 'index.html')
+            else:
+                logger.error(f"index.html not found at {index_path}")
+                return "index.html not found", 404
 
     @app.route('/api/log', methods=['POST'])
     def log_api():
@@ -66,112 +79,37 @@ def create_app():
         log_handler.add_log(f"[INFO] [API] Received log: {json.dumps(log_data)}")
         return jsonify({"success": True, "message": "Log received"})
 
-    @app.route('/api/get_logs', methods=['GET'])
-    def get_logs():
-        level = request.args.get('level')
-        module = request.args.get('module')
-        keyword = request.args.get('keyword')
+    @app.route('/api/get_settings', methods=['GET'])
+    def get_settings():
+        # Implement get_settings logic here
+        return jsonify({"success": True, "settings": {}})
 
-        if level:
-            logs = log_handler.get_logs_by_level(level)
-        elif module:
-            logs = log_handler.get_logs_by_module(module)
-        elif keyword:
-            logs = log_handler.search_logs(keyword)
-        else:
-            logs = log_handler.get_recent_logs()
+    @app.route('/api/get_projects', methods=['GET'])
+    def get_projects():
+        # Implement get_projects logic here
+        return jsonify({"success": True, "projects": []})
 
-        return jsonify({"success": True, "logs": logs})
+    @app.route('/api/ai_models', methods=['GET'])
+    def get_ai_models():
+        # Implement get_ai_models logic here
+        return jsonify({"success": True, "models": []})
 
-    # Agent-related endpoints
-    @app.route('/api/agents', methods=['POST'])
-    def create_agent():
-        data = request.json
-        new_agent = Agent(
-            name=data['name'],
-            description=data.get('description', ''),
-            prompt=data.get('prompt', ''),
-            ai_model=data.get('ai_model', ''),
-            skills=data.get('skills', [])
-        )
-        agent_id = db.add_agent(new_agent)
-        new_agent.id = agent_id  # Assign the ID returned from the database
-        logger.info(f"Created new agent with ID {agent_id}")
-        log_handler.add_log(f"[INFO] [API] Created new agent with ID {agent_id}")
-        return jsonify({"success": True, "agent_id": agent_id})
+    @app.route('/api/test_anthropic', methods=['GET'])
+    def test_anthropic():
+        success, message = anthropic_client.test_api()
+        logger.info(f"Anthropic API test result: success={success}, message={message}")
+        return jsonify({"success": success, "message": message})
 
-    @app.route('/api/agents', methods=['GET'])
-    def get_agents():
-        agents = db.get_all_agents()
-        agent_list = [agent.to_dict() for agent in agents]
-        logger.info(f"Retrieved list of agents")
-        log_handler.add_log(f"[INFO] [API] Retrieved list of agents")
-        return jsonify({"success": True, "agents": agent_list})
-
-    @app.route('/api/agents/<int:agent_id>', methods=['GET'])
-    def get_agent(agent_id):
-        agent = db.get_agent(agent_id)
-        if agent:
-            logger.info(f"Retrieved agent with ID {agent_id}")
-            log_handler.add_log(f"[INFO] [API] Retrieved agent with ID {agent_id}")
-            return jsonify({"success": True, "agent": agent.to_dict()})
-        else:
-            logger.warning(f"Agent with ID {agent_id} not found")
-            log_handler.add_log(f"[WARNING] [API] Agent with ID {agent_id} not found")
-            return jsonify({"success": False, "error": "Agent not found"}), 404
-
-    @app.route('/api/agents/<int:agent_id>', methods=['PUT'])
-    def update_agent(agent_id):
-        data = request.json
-        agent = db.get_agent(agent_id)
-        if agent:
-            agent.name = data.get('name', agent.name)
-            agent.description = data.get('description', agent.description)
-            agent.prompt = data.get('prompt', agent.prompt)
-            agent.ai_model = data.get('ai_model', agent.ai_model)
-            agent.skills = data.get('skills', agent.skills)
-            db.update_agent(agent)
-            logger.info(f"Updated agent with ID {agent_id}")
-            log_handler.add_log(f"[INFO] [API] Updated agent with ID {agent_id}")
-            return jsonify({"success": True, "agent": agent.to_dict()})
-        else:
-            logger.warning(f"Agent with ID {agent_id} not found")
-            log_handler.add_log(f"[WARNING] [API] Agent with ID {agent_id} not found")
-            return jsonify({"success": False, "error": "Agent not found"}), 404
-
-    @app.route('/api/agents/<int:agent_id>', methods=['DELETE'])
-    def delete_agent(agent_id):
-        agent = db.get_agent(agent_id)
-        if agent:
-            db.delete_agent(agent_id)
-            logger.info(f"Deleted agent with ID {agent_id}")
-            log_handler.add_log(f"[INFO] [API] Deleted agent with ID {agent_id}")
-            return jsonify({"success": True, "message": f"Agent {agent_id} deleted"})
-        else:
-            logger.warning(f"Agent with ID {agent_id} not found")
-            log_handler.add_log(f"[WARNING] [API] Agent with ID {agent_id} not found")
-            return jsonify({"success": False, "error": "Agent not found"}), 404
-
-    @app.route('/api/agents/<int:agent_id>/feedback', methods=['POST'])
-    def submit_feedback(agent_id):
-        feedback_data = request.json
-        agent = db.get_agent(agent_id)
-        if agent:
-            # Assume there's a method to handle feedback
-            db.add_feedback_to_agent(agent_id, feedback_data['content'])
-            logger.info(f"Feedback submitted for agent with ID {agent_id}")
-            log_handler.add_log(f"[INFO] [API] Feedback submitted for agent with ID {agent_id}")
-            return jsonify({"success": True, "message": "Feedback submitted successfully"})
-        else:
-            logger.warning(f"Agent with ID {agent_id} not found")
-            log_handler.add_log(f"[WARNING] [API] Agent with ID {agent_id} not found")
-            return jsonify({"success": False, "error": "Agent not found"}), 404
-
-    # Additional endpoints...
+    @app.route('/api/test_openrouter', methods=['GET'])
+    def test_openrouter():
+        success, message = openrouter_client.test_api()
+        logger.info(f"OpenRouter API test result: success={success}, message={message}")
+        return jsonify({"success": success, "message": message})
 
     def handle_api_request(path):
-        # Implementation for handling other API requests
-        pass
+        # This function should handle all API requests
+        # You can add more specific handling based on the path
+        return jsonify({"error": "Not implemented"}), 501
 
     return app
 
@@ -183,4 +121,3 @@ def start_server(port=5159):
 
 if __name__ == '__main__':
     start_server()
-```

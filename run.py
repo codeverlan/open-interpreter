@@ -1,8 +1,12 @@
 import os
 import subprocess
 import sys
+from dotenv import load_dotenv
 from interpreter.extended_interpreter import ExtendedInterpreter
 from interpreter.server.api import start_server
+
+# Load environment variables
+load_dotenv()
 
 def install_python_dependencies():
     subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
@@ -27,11 +31,14 @@ def main():
         # Build the React app
         build_react_app()
 
+        # Get the port number from the environment variable, with a default of 5159
+        port = int(os.getenv('SERVER_PORT', 5159))
+
         # Initialize the ExtendedInterpreter
-        interpreter = ExtendedInterpreter(server_port=5159)
+        interpreter = ExtendedInterpreter(server_port=port)
 
         # Start the server
-        start_server(interpreter, port=5159)
+        start_server(port=port)
     finally:
         # Change back to the original directory
         os.chdir(original_dir)

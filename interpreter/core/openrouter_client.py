@@ -1,6 +1,6 @@
 import requests
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -59,6 +59,22 @@ class OpenRouterClient:
         }
         return self._make_request("/completions", method="POST", data=data)
 
+    def test_api(self) -> Tuple[bool, str]:
+        try:
+            models = self.get_available_models()
+            if not models:
+                return False, "No models available. API key may be invalid or there might be a connection issue."
+            
+            test_message = [{"role": "user", "content": "Hello, OpenRouter. Please respond with 'API test successful' if you receive this message."}]
+            response = self.chat_completion(test_message, models[0])
+            
+            if "choices" in response and response["choices"][0]["message"]["content"].strip().lower() == "api test successful":
+                return True, "OpenRouter API test successful"
+            else:
+                return False, f"Unexpected response: {response}"
+        except Exception as e:
+            return False, f"Error testing OpenRouter API: {str(e)}"
+
 # Initialize the OpenRouterClient
 openrouter_client = OpenRouterClient()
 
@@ -66,3 +82,4 @@ openrouter_client = OpenRouterClient()
 # available_models = openrouter_client.get_available_models()
 # chat_response = openrouter_client.chat_completion([{"role": "user", "content": "Hello, how are you?"}], "openai/gpt-3.5-turbo")
 # text_response = openrouter_client.text_completion("Once upon a time", "openai/gpt-3.5-turbo")
+# test_result, test_message = openrouter_client.test_api()
